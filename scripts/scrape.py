@@ -57,7 +57,12 @@ def main() -> int:
         choices=list(SYSTEM_SLUGS),
     )
     ap.add_argument("--max-pages", type=int, default=500)
-    ap.add_argument("--flush-every", type=int, default=100, help="JSONL flush cadence")
+    ap.add_argument("--flush-every", type=int, default=100, help="JSONL flush cadence (rows)")
+    ap.add_argument(
+        "--flush-idle-seconds", type=int, default=30,
+        help="Also flush if this many seconds have elapsed since the last write "
+             "(useful when redump is slow/flaky and rows accumulate slowly).",
+    )
     ap.add_argument(
         "--workers", type=int, default=4,
         help="Concurrent in-flight requests. Start spacing is still rate-limited "
@@ -117,6 +122,7 @@ def main() -> int:
         # lock + 1s throttle guarantees request *starts* are still spaced 1/sec,
         # so redump's load is unchanged — we just stop blocking on slow responses.
         started = time.monotonic()
+        last_flush = started
         fetched = parsed = failed = 0
         dirty = 0
 
@@ -159,10 +165,18 @@ def main() -> int:
                 if fetched <= 5 and ok:
                     log.info("fetched disc %d (system=%s) — %d/%d", rid, system, fetched, total)
 
-                if dirty >= args.flush_every:
+                # Flush on either: row count threshold, OR idle-time threshold
+                # (so flaky periods with slow throughput still save progress).
+                now = time.monotonic()
+                if dirty > 0 and (
+                    dirty >= args.flush_every
+                    or now - last_flush >= args.flush_idle_seconds
+                ):
                     write_jsonl(rows_by_id.values())
-                    log.info("checkpoint: wrote %d total rows", len(rows_by_id))
+                    log.info("checkpoint: wrote %d total rows (dirty=%d, age=%.0fs)",
+                             len(rows_by_id), dirty, now - last_flush)
                     dirty = 0
+                    last_flush = now
 
                 if fetched % 50 == 0:
                     elapsed = time.monotonic() - started
