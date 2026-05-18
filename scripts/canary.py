@@ -27,6 +27,7 @@ CANARY_IDS: list[tuple[int, str]] = [
     (44803, "pc"),     # MechWarrior 2 (PC EU) — multi-dumper, zero-date PVD
     (27832, "pc"),     # Super Street Fighter II Turbo — 45 tracks, no Serial field, has Version
     (16345, "pc"),     # American McGee's Alice — 5 languages, multi-ring, Comments w/ HTML
+    (92225, "pc"),     # 007 Legends — DVD-9, 6-col track table, has Layerbreak
 ]
 
 

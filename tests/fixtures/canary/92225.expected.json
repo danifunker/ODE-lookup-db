@@ -1,0 +1,60 @@
+{
+  "barcode": "5 030917 121371",
+  "category": "Games",
+  "date_added": "2022-04-18 17:47",
+  "date_last_modified": "2022-06-26 08:21",
+  "disc_structure": {
+    "ifpi": "IFPI L641",
+    "layer_break": 2008656,
+    "mould_sid": "IFPI 1I76",
+    "ring_mastering_codes": [
+      "LASER CRAFT UL 123782D9 (L1)"
+    ]
+  },
+  "dumpers": [
+    "Bigmanjapan"
+  ],
+  "edition": "Original",
+  "languages": [
+    "en",
+    "fr",
+    "de",
+    "ru"
+  ],
+  "languages_raw": [
+    "English",
+    "French",
+    "German",
+    "Russian"
+  ],
+  "media": "DVD-9",
+  "pvd": {
+    "creation_date": "2012-10-07T00:30:56.00-07:00",
+    "effective_date": "2012-10-07T00:30:30.00-07:00",
+    "expiration_date": "1988-10-07T00:30:30.00-07:00",
+    "modification_date": "2012-10-07T00:30:56.00-07:00",
+    "system_identifier": null,
+    "volume_identifier": null
+  },
+  "redump_id": 92225,
+  "redump_url": "http://redump.org/disc/92225/",
+  "region": [
+    "Russia"
+  ],
+  "schema_version": 1,
+  "serials": [
+    "33409101RU"
+  ],
+  "system": "pc",
+  "title": "007 Legends",
+  "tracks": [
+    {
+      "crc32": "b53f6b2b",
+      "md5": "48f07edef1bd56c0f5b2f3bc60b82b83",
+      "number": 1,
+      "sha1": "4d5b47a4d509ba2508f491794b4bef14b6279762",
+      "size_bytes": 8227422208,
+      "type": "data"
+    }
+  ]
+}

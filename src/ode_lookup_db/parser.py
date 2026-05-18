@@ -69,6 +69,7 @@ def parse_disc_page(html: str, redump_id: int, system: str) -> dict[str, Any]:
         "tracks": _extract_tracks(tree),
     }
 
+    layer_break = _parse_int(_text(gameinfo.get("Layerbreak")))
     optional = {
         "region": _extract_imgs_titles(gameinfo.get("Region")),
         "languages_raw": _extract_imgs_titles(gameinfo.get("Languages")),
@@ -77,8 +78,9 @@ def parse_disc_page(html: str, redump_id: int, system: str) -> dict[str, Any]:
         "serials": _extract_serials(gameinfo),
         "barcode": _normalize_barcode(comments.get("Barcode")),
         "category": _text(gameinfo.get("Category")),
+        "media": _text(gameinfo.get("Media")),
         "pvd": _extract_pvd(tree),
-        "disc_structure": _extract_disc_structure(tree),
+        "disc_structure": _extract_disc_structure(tree, layer_break=layer_break),
         "dumpers": _extract_dumpers(tree),
         "date_added": _text(gameinfo.get("Added")),
         "date_last_modified": _text(gameinfo.get("Last modified")),
@@ -196,39 +198,79 @@ def _extract_dumpers(tree: HTMLParser) -> list[str]:
 
 
 def _extract_tracks(tree: HTMLParser) -> list[dict[str, Any]]:
+    """Header-driven track parsing.
+
+    CD layout (9 cols):  # | Type | Pregap | Length | Sectors | Size | CRC-32 | MD5 | SHA-1
+    DVD layout (6 cols): # | Sectors | Size | CRC-32 | MD5 | SHA-1   (no Type — implicit data)
+    """
     table = tree.css_first("table.tracks")
     if table is None:
         raise ParseError("no tracks table on disc page")
+
+    # Find the header row (all <th>, no <td>) inside the tracks table.
+    headers: list[str] = []
+    for tr in table.css("tr"):
+        ths = tr.css("th")
+        if ths and not tr.css("td"):
+            candidate = [th.text(strip=True) for th in ths]
+            if "#" in candidate:
+                headers = candidate
+                break
+    if not headers:
+        raise ParseError("tracks table missing header row")
+
+    def col(name: str) -> int | None:
+        try:
+            return headers.index(name)
+        except ValueError:
+            return None
+
+    i_num, i_type = col("#"), col("Type")
+    i_size, i_crc = col("Size"), col("CRC-32")
+    i_md5, i_sha1 = col("MD5"), col("SHA-1")
+    if i_num is None or i_size is None or i_crc is None:
+        raise ParseError(f"unexpected tracks table headers: {headers}")
+
     tracks: list[dict[str, Any]] = []
     for tr in table.css("tr"):
         tds = tr.css("td")
-        if len(tds) < 9:
+        if len(tds) < len(headers):
             continue
-        first_cell = tds[0].text(strip=True)
-        if not first_cell.isdigit():  # skips header (no <td>) and "Total" row (empty first cell)
+        first = tds[i_num].text(strip=True)
+        if not first.isdigit():  # skips header and "Total" summary row
             continue
-        type_raw = tds[1].text(strip=True)
-        track_type = TRACK_TYPE_MAP.get(type_raw)
-        if track_type is None:
-            log.warning("unknown track type %r — skipping track", type_raw)
-            continue
-        size_text = tds[5].text(strip=True)
-        try:
-            size_bytes = int(size_text)
-        except ValueError:
-            size_bytes = None
+
+        if i_type is not None:
+            type_raw = tds[i_type].text(strip=True)
+            track_type = TRACK_TYPE_MAP.get(type_raw)
+            if track_type is None:
+                log.warning("unknown track type %r — skipping track", type_raw)
+                continue
+        else:
+            track_type = "data"  # DVD/BD tables have no Type column
+
+        size_bytes = _parse_int(tds[i_size].text(strip=True))
         track: dict[str, Any] = {
-            "number": int(first_cell),
+            "number": int(first),
             "type": track_type,
             "size_bytes": size_bytes,
-            "crc32": _hex_or_none(tds[6].text(strip=True), 8),
-            "md5": _hex_or_none(tds[7].text(strip=True), 32),
-            "sha1": _hex_or_none(tds[8].text(strip=True), 40),
+            "crc32": _hex_or_none(tds[i_crc].text(strip=True), 8),
+            "md5": _hex_or_none(tds[i_md5].text(strip=True), 32) if i_md5 is not None else None,
+            "sha1": _hex_or_none(tds[i_sha1].text(strip=True), 40) if i_sha1 is not None else None,
         }
         tracks.append(track)
     if not tracks:
         raise ParseError("no tracks parsed from tracks table")
     return tracks
+
+
+def _parse_int(text: str | None) -> int | None:
+    if text is None:
+        return None
+    try:
+        return int(text.strip())
+    except (ValueError, AttributeError):
+        return None
 
 
 def _hex_or_none(text: str, length: int) -> str | None:
@@ -286,10 +328,12 @@ def _format_pvd_datetime(date_str: str, time_str: str, gmt_str: str) -> str | No
     return "".join(parts)
 
 
-def _extract_disc_structure(tree: HTMLParser) -> dict[str, Any] | None:
+def _extract_disc_structure(tree: HTMLParser, *, layer_break: int | None = None) -> dict[str, Any] | None:
     table = tree.css_first("table.rings")
     if table is None:
-        return None
+        if layer_break is None:
+            return None
+        return {"ring_mastering_codes": [], "mould_sid": None, "ifpi": None, "layer_break": layer_break}
     # Locate header row to learn column order — varies by disc.
     header_row = None
     for tr in table.css("tr"):
@@ -338,11 +382,11 @@ def _extract_disc_structure(tree: HTMLParser) -> dict[str, Any] | None:
         if ifpi is None:
             ifpi = cell_text(msid_i)
 
-    if not mastering_codes and mould_sid is None and ifpi is None:
+    if not mastering_codes and mould_sid is None and ifpi is None and layer_break is None:
         return None
     return {
         "ring_mastering_codes": mastering_codes,
         "mould_sid": mould_sid,
         "ifpi": ifpi,
-        "layer_break": None,
+        "layer_break": layer_break,
     }

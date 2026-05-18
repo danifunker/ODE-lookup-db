@@ -12,6 +12,9 @@ build/
 # Built artifact — released, not committed
 data/redump.sqlite
 
+# Local resume state — not committed
+data/discovery.json
+
 # Local scratch
 .DS_Store
 *.swp

@@ -51,6 +51,10 @@
     },
     "barcode": { "type": ["string", "null"] },
     "category": { "type": ["string", "null"] },
+    "media": {
+      "type": ["string", "null"],
+      "description": "Physical media type as reported by redump (CD, DVD-5, DVD-9, BD-25, etc.)"
+    },
     "pvd": {
       "type": ["object", "null"],
       "additionalProperties": true,

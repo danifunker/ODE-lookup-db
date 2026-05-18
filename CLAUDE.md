@@ -52,6 +52,19 @@ tests/                 # pytest; tests/fixtures/ holds cached HTML
 | 44803  | pc  | MechWarrior 2 (PC EU) — multi-dumper, zero-date PVD |
 | 27832  | pc  | Super Street Fighter II Turbo — 45 tracks, no Serial, has Version |
 | 16345  | pc  | American McGee's Alice — 5 languages, multi-ring, HTML in Comments |
+| 92225  | pc  | 007 Legends — DVD-9, 6-column track table, has Layerbreak |
+
+## Resumable bulk scrape
+
+`scripts/scrape.py` is checkpointed in two ways:
+- **Discovery cache** at `data/discovery.json` (gitignored). Listing pages are walked once; restart reuses the cached `{system: [redump_id, ...]}` map. Force a rewalk with `--refresh-discovery`.
+- **JSONL flush** every `--flush-every` rows (default 100). Crash/Ctrl-C loses at most that many in-flight rows; restart skips already-stored IDs.
+
+ETA + parsed/failed counters log every 50 fetches.
+
+## Media field & DVDs
+
+The schema includes an optional `media` field (e.g. "CD", "DVD-9"). DVDs are **kept**, not filtered — consumers can `WHERE media LIKE 'CD%'` to get CD-only. DVD track tables have 6 columns (no Type/Pregap/Length) instead of CD's 9; the parser is header-driven and handles both.
 
 ## How to run locally (macOS)
 

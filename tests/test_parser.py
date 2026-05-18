@@ -28,6 +28,7 @@ CANARY: list[tuple[int, str]] = [
     (44803, "pc"),
     (27832, "pc"),
     (16345, "pc"),
+    (92225, "pc"),  # DVD-9 — 6-col track table
 ]
 
 
