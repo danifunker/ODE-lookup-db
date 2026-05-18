@@ -30,7 +30,7 @@ def _row(rid: int) -> dict:
 
 
 def test_jsonl_roundtrip(tmp_path: Path):
-    path = tmp_path / "out.jsonl.gz"
+    path = tmp_path / "out.jsonl"
     rows = [_row(2), _row(1), _row(3)]
     n = write_jsonl(rows, path=path)
     assert n == 3

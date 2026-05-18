@@ -22,27 +22,55 @@ SYSTEM_SLUGS: dict[str, str] = {
 }
 
 
-def discover_disc_ids(client: RedumpClient, system: str, max_pages: int = 50) -> list[tuple[int, str]]:
+def discover_disc_ids(
+    client: RedumpClient,
+    system: str,
+    *,
+    max_pages: int = 500,
+    known_ids: set[int] | None = None,
+    target_unknown: int | None = None,
+) -> list[tuple[int, str]]:
     """Walk the system listing pages and return [(redump_id, system), ...].
 
-    Stops after `max_pages` or when a page yields no new IDs.
+    Stops as soon as one of these is true:
+      - `max_pages` pages have been read,
+      - the current page yielded no IDs we haven't already seen *this walk*,
+      - `target_unknown` is set and we've found at least that many IDs that
+        are not in `known_ids` (i.e. enough new work for the caller).
+
+    `known_ids` (typically the redump_ids already in JSONL) lets the daily
+    cron stop after one or two pages: as soon as a page yields no IDs the
+    caller would need to fetch, there's nothing more to discover.
     """
     slug = SYSTEM_SLUGS[system]
+    known = known_ids or set()
     found: list[tuple[int, str]] = []
     seen: set[int] = set()
+    unknown_count = 0
     for page in range(1, max_pages + 1):
         resp = client.get_system_page(slug, page=page)
         if resp.status_code != 200:
             log.warning("system %s page %d returned HTTP %d — stopping", system, page, resp.status_code)
             break
         ids = extract_disc_ids_from_system_page(resp.text)
-        new = [i for i in ids if i not in seen]
-        if not new:
+        new_this_walk = [i for i in ids if i not in seen]
+        unknown_on_page = sum(1 for i in new_this_walk if i not in known)
+        unknown_count += unknown_on_page
+        log.info(
+            "discovery %s page %d: %d new (%d unknown to JSONL) — totals: %d ids / %d unknown",
+            system, page, len(new_this_walk), unknown_on_page,
+            len(found) + len(new_this_walk), unknown_count,
+        )
+        if not new_this_walk:
             break
-        for rid in new:
+        for rid in new_this_walk:
             seen.add(rid)
             found.append((rid, system))
-    log.info("discovered %d disc IDs for system=%s", len(found), system)
+        if target_unknown is not None and unknown_count >= target_unknown:
+            log.info("discovery %s: reached target_unknown=%d, stopping", system, target_unknown)
+            break
+    log.info("discovered %d disc IDs for system=%s (%d unknown to JSONL)",
+             len(found), system, unknown_count)
     return found
 
 

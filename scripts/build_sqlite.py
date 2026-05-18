@@ -1,4 +1,4 @@
-"""Build data/redump.sqlite from data/redump.jsonl.gz."""
+"""Build data/redump.sqlite from data/redump.jsonl."""
 
 from __future__ import annotations
 

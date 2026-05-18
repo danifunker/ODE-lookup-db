@@ -1,12 +1,11 @@
 """JSONL <-> SQLite I/O for the disc database.
 
-`data/redump.jsonl.gz` is the source of truth (committed).
+`data/redump.jsonl` is the source of truth (committed, plain text for diffs).
 `data/redump.sqlite` is the released artifact, rebuilt from JSONL every run.
 """
 
 from __future__ import annotations
 
-import gzip
 import sqlite3
 from datetime import datetime, UTC
 from pathlib import Path
@@ -17,14 +16,14 @@ import orjson
 from . import SCHEMA_VERSION
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-JSONL_PATH = REPO_ROOT / "data" / "redump.jsonl.gz"
+JSONL_PATH = REPO_ROOT / "data" / "redump.jsonl"
 SQLITE_PATH = REPO_ROOT / "data" / "redump.sqlite"
 
 
 def read_jsonl(path: Path = JSONL_PATH) -> Iterator[dict[str, Any]]:
     if not path.exists():
         return
-    with gzip.open(path, "rb") as f:
+    with path.open("rb") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -36,8 +35,7 @@ def write_jsonl(rows: Iterable[dict[str, Any]], path: Path = JSONL_PATH) -> int:
     sorted_rows = sorted(rows, key=lambda r: r["redump_id"])
     path.parent.mkdir(parents=True, exist_ok=True)
     count = 0
-    # mtime=0 -> deterministic gzip header for reproducible commits.
-    with gzip.GzipFile(filename=str(path), mode="wb", mtime=0) as f:
+    with path.open("wb") as f:
         for row in sorted_rows:
             f.write(orjson.dumps(row, option=orjson.OPT_SORT_KEYS))
             f.write(b"\n")

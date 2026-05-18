@@ -3,7 +3,7 @@ name: Validate PR
 on:
   pull_request:
     paths:
-      - "data/redump.jsonl.gz"
+      - "data/redump.jsonl"
       - "schema/**"
       - "src/**"
       - "scripts/**"

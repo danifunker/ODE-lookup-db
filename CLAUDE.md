@@ -4,7 +4,7 @@ This repo is the **source of truth for the ODE optical-disc lookup database**, s
 
 ## Resolved design decisions (do not relitigate)
 
-1. **SQLite is release-only.** `data/redump.sqlite` is built from `data/redump.jsonl.gz` during the workflow and attached to a GitHub Release (`db-YYYY-MM-DD` plus a moving `latest` tag). It is **not** committed; `.gitignore` excludes it.
+1. **SQLite is release-only.** `data/redump.sqlite` is built from `data/redump.jsonl` during the workflow and attached to a GitHub Release (`db-YYYY-MM-DD` plus a moving `latest` tag). It is **not** committed; `.gitignore` excludes it.
 2. **No scheduled full refresh.** The daily cron only discovers and fetches *new* disc IDs. Updates to existing rows happen via user-filed GitHub issues with the `disc-recheck` label (template in `.github/ISSUE_TEMPLATE/disc-recheck.yml`).
 3. **Recheck rate limit: 30 per UTC day** (env var `MAX_RECHECKS_PER_DAY`). Overflow issues get a queued comment, not a manual approval gate. The user explicitly does not want approval friction.
 4. **No `page_sha256` field.** Without scheduled refreshes there is nothing to compare against.
@@ -27,7 +27,7 @@ This repo is the **source of truth for the ODE optical-disc lookup database**, s
 ## Repository layout
 
 ```
-data/redump.jsonl.gz   # source of truth (committed)
+data/redump.jsonl   # source of truth (committed)
 data/stats.json        # row counts, by-system tallies, all known IDs
 schema/                # JSON Schema + human docs
 src/ode_lookup_db/     # importable modules

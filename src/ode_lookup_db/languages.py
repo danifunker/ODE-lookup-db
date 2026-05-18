@@ -43,6 +43,14 @@ LANGUAGE_MAP: dict[str, str] = {
     "croatian": "hr",
     "serbian": "sr",
     "slovenian": "sl",
+    "thai": "th",
+    "vietnamese": "vi",
+    "indonesian": "id",
+    "malay": "ms",
+    "hindi": "hi",
+    "estonian": "et",
+    "latvian": "lv",
+    "lithuanian": "lt",
 }
 
 UNMAPPED_CODE = "zz"

@@ -15,6 +15,12 @@ data/redump.sqlite
 # Local resume state — not committed
 data/discovery.json
 
+# Ephemeral validator output
+data/warnings.json
+
+# Local run logs
+logs/
+
 # Local scratch
 .DS_Store
 *.swp

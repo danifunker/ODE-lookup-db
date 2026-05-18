@@ -74,7 +74,7 @@ sqlite3 data/redump.sqlite '.schema'
 ### Repo layout
 
 ```
-data/redump.jsonl.gz   source of truth (one disc per line, gzipped JSONL)
+data/redump.jsonl      source of truth (one disc per line, plain JSONL)
 data/stats.json        row counts + all known IDs
 data/redump.sqlite     built artifact (not committed; released)
 schema/                JSON Schema + human field docs
@@ -93,7 +93,7 @@ Triggered by cron at 06:17 UTC and via `workflow_dispatch`:
 3. Fetch each new disc (≤ 1 req/sec, polite User-Agent)
 4. Parse → validate against `schema/disc.schema.json`
 5. Run canary (re-parse pinned discs, assert exact expected output)
-6. Append/update `data/redump.jsonl.gz`, refresh `stats.json`
+6. Append/update `data/redump.jsonl`, refresh `stats.json`
 7. Commit; tag previous HEAD as `db-good-YYYY-MM-DD` for rollback
 8. Build `redump.sqlite` and publish as a GitHub Release
 

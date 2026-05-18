@@ -49,19 +49,32 @@ class RedumpClient:
         self._client.close()
 
     def _throttle(self) -> None:
+        """Space requests by exactly `min_interval` from each other's start.
+
+        Anchoring on the *start* of the previous request (rather than its end)
+        means redump's response latency doesn't double our interval — if the
+        server takes 1s and our interval is 1s, we still get 1 req/s, not 0.5.
+        """
         with self._lock:
-            elapsed = time.monotonic() - self._last_request
+            now = time.monotonic()
+            elapsed = now - self._last_request
             if elapsed < self._min_interval:
                 time.sleep(self._min_interval - elapsed)
-            self._last_request = time.monotonic()
+                self._last_request += self._min_interval
+            else:
+                self._last_request = now
 
     @retry(
         retry=retry_if_exception_type((httpx.TransportError, httpx.HTTPStatusError)),
-        wait=wait_exponential(multiplier=2, min=2, max=60),
-        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, min=2, max=300),
+        stop=stop_after_attempt(10),
         reraise=True,
     )
     def get(self, path: str) -> httpx.Response:
+        # Tolerant retries: 10 attempts with exponential backoff capped at 5 min.
+        # Max total wait per request: ~25 minutes. A short redump outage rides
+        # through transparently; a longer one will eventually raise, and the
+        # caller is expected to log+skip rather than crash the run.
         self._throttle()
         log.debug("GET %s", path)
         resp = self._client.get(path)
