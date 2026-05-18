@@ -2,7 +2,7 @@
 
 Auto-updated database of optical-disc identification metadata, scraped from [redump.org](http://redump.org) and curated for the USBODE ecosystem.
 
-**Scope**: PC (IBM PC compatible), Mac (Apple Macintosh), and Hybrid (Mac/PC mixed) CD-ROM entries. Consoles, audio CDs, and video discs are out of scope.
+**Scope**: PC (IBM PC compatible) and Mac (Apple Macintosh) CD-ROM and DVD entries. Mac/PC hybrid discs are filed by redump under whichever system page is canonical (pc or mac) and are picked up automatically. Consoles, audio CDs, and video discs are out of scope.
 
 ## For consumers (apps that look up discs)
 
@@ -89,7 +89,7 @@ tests/                 pytest; fixtures hold cached HTML
 Triggered by cron at 06:17 UTC and via `workflow_dispatch`:
 
 1. Process open `disc-recheck` issues (≤ 30/day)
-2. Discover new disc IDs across PC / Mac / Hybrid system pages
+2. Discover new disc IDs across PC and Mac system pages
 3. Fetch each new disc (≤ 1 req/sec, polite User-Agent)
 4. Parse → validate against `schema/disc.schema.json`
 5. Run canary (re-parse pinned discs, assert exact expected output)

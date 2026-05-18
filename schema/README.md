@@ -14,7 +14,7 @@ Human documentation of every field in `disc.schema.json`. The JSON Schema is aut
 |---|---|---|---|
 | `schema_version` | int | yes | Always `1` in v1. |
 | `redump_id` | int | yes | Unique key. Same disc on multiple system pages is deduped on this ID. |
-| `system` | enum | yes | One of `pc`, `mac`, `hybrid`. Allowlist enforced by validator. |
+| `system` | enum | yes | One of `pc`, `mac`. Allowlist enforced by validator. |
 | `title` | string | yes | Primary title as shown by redump. |
 | `foreign_title` | string\|null | no | Localized title if the entry has one. |
 | `region` | string[] | no | Redump's region tags, e.g. `["USA", "Europe"]`. Stored verbatim. |

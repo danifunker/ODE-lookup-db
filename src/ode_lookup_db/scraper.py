@@ -18,7 +18,6 @@ log = logging.getLogger(__name__)
 SYSTEM_SLUGS: dict[str, str] = {
     "pc": "pc",
     "mac": "mac",
-    "hybrid": "hybrid",
 }
 
 

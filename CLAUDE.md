@@ -9,7 +9,7 @@ This repo is the **source of truth for the ODE optical-disc lookup database**, s
 3. **Recheck rate limit: 30 per UTC day** (env var `MAX_RECHECKS_PER_DAY`). Overflow issues get a queued comment, not a manual approval gate. The user explicitly does not want approval friction.
 4. **No `page_sha256` field.** Without scheduled refreshes there is nothing to compare against.
 5. **Row-count shrink is a soft warning, not a hard failure.** Legitimate upstream deletions are expected to be rare; we log an issue but still commit.
-6. **Dedup on `redump_id` only.** Same disc with different IDs on PC + Hybrid = two rows. Same ID across pages = one row.
+6. **Dedup on `redump_id` only.** Each disc has exactly one canonical redump_id and appears in exactly one system bucket (`pc` or `mac`). There is no separate "hybrid" listing on redump — that was a mistake in the original brief.
 7. **Schema v1, forward-compatible only.** Adding optional fields is fine; renames/removals require a new major version. `meta.schema_version = 1` in SQLite.
 8. **Languages**: store both ISO 639-1 code (`languages`) and the raw redump string (`languages_raw`). Unmapped → `"zz"`, with a log warning so we can extend `LANGUAGE_MAP` in `src/ode_lookup_db/languages.py`.
 9. **User-Agent**: `ODE-lookup-db/1.0 (+https://github.com/danifunker/ODE-lookup-db)`. Owner is `danifunker`.
