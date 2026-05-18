@@ -81,15 +81,28 @@ def main() -> int:
 
     with RedumpClient() as client:
         # --- Discovery (cached) -------------------------------------------------
-        discovery = None if args.refresh_discovery else load_discovery()
-        if discovery is None:
-            discovery = {}
-            known_ids = set(rows_by_id.keys())
-            # When --limit is set, stop discovery early once we have enough
-            # unknown IDs. Otherwise (bulk run), walk until the listing ends.
-            # Add a small buffer so failed parses don't shortchange the budget.
-            target = (args.limit + 50) if args.limit is not None else None
+        cached = None if args.refresh_discovery else load_discovery()
+        discovery: dict[str, list[int]] = {} if cached is None else dict(cached)
+        known_ids = set(rows_by_id.keys())
+        # When --limit is set, stop discovery early once we have enough
+        # unknown IDs. Otherwise (bulk run), walk until the listing ends.
+        # Add a small buffer so failed parses don't shortchange the budget.
+        target = (args.limit + 50) if args.limit is not None else None
+
+        # Walk listing pages for any requested system that isn't already cached.
+        # Auto-extending the cache means `--systems mac` followed by `--systems pc`
+        # doesn't drop Mac's cached IDs.
+        missing = [s for s in args.systems if s not in discovery]
+        if cached is not None and not missing:
+            log.info("using cached discovery (%s); pass --refresh-discovery to rebuild",
+                     {s: len(v) for s, v in discovery.items()})
+        else:
+            if cached is not None and missing:
+                log.info("cache has %s; walking listing pages for missing: %s",
+                         list(cached.keys()), missing)
             for system in args.systems:
+                if system in discovery and cached is not None:
+                    continue
                 ids = [
                     rid for rid, _ in discover_disc_ids(
                         client, system,
@@ -101,9 +114,6 @@ def main() -> int:
                 discovery[system] = ids
             save_discovery(discovery)
             log.info("discovery cached at %s", DISCOVERY_PATH)
-        else:
-            log.info("using cached discovery (%s); pass --refresh-discovery to rebuild",
-                     {s: len(v) for s, v in discovery.items()})
 
         # --- Build target list (new IDs only) ----------------------------------
         targets: list[tuple[int, str]] = []
