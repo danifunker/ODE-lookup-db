@@ -1,0 +1,66 @@
+{
+  "barcode": "0 14633 14145 0",
+  "category": "Games",
+  "date_added": "2010-10-19 13:49",
+  "date_last_modified": "2021-12-01 11:57",
+  "disc_structure": {
+    "ifpi": "IFPI LB41",
+    "layer_break": null,
+    "mould_sid": "IFPI 1030, IFPI 1020",
+    "ring_mastering_codes": [
+      "1414507 + + A4279-01",
+      "A4681-02 1414507"
+    ]
+  },
+  "dumpers": [
+    "joel4565",
+    "Nexy",
+    "nightson",
+    "Digitoxin"
+  ],
+  "edition": "Original",
+  "languages": [
+    "nl",
+    "en",
+    "fr",
+    "de",
+    "es"
+  ],
+  "languages_raw": [
+    "Dutch",
+    "English",
+    "French",
+    "German",
+    "Spanish"
+  ],
+  "pvd": {
+    "creation_date": "2000-11-16T17:31:17.00+00:00",
+    "effective_date": null,
+    "expiration_date": null,
+    "modification_date": "2000-11-16T17:31:17.00+00:00",
+    "system_identifier": null,
+    "volume_identifier": null
+  },
+  "redump_id": 16345,
+  "redump_url": "http://redump.org/disc/16345/",
+  "region": [
+    "USA"
+  ],
+  "schema_version": 1,
+  "serials": [
+    "1414507"
+  ],
+  "system": "pc",
+  "title": "American McGee's Alice (Disc 1)",
+  "tracks": [
+    {
+      "crc32": "33885420",
+      "md5": "79a2de46bce7e25382586af9eeb50a00",
+      "number": 1,
+      "sha1": "110607211acc363e033cff4d02a6d6729a8e05eb",
+      "size_bytes": 769517952,
+      "type": "data"
+    }
+  ],
+  "version": "1.0"
+}

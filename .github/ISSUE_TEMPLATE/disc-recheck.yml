@@ -1,0 +1,24 @@
+name: Disc re-check request
+description: Request that a specific disc be re-scraped (e.g. metadata updated upstream)
+title: "[recheck] redump_id <ID> — <short reason>"
+labels: ["disc-recheck"]
+body:
+  - type: input
+    id: redump_id
+    attributes:
+      label: redump_id
+      description: The numeric ID from the redump.org disc URL (e.g. 133460 from http://redump.org/disc/133460/).
+      placeholder: "133460"
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: What changed or what is wrong?
+      description: Brief description — missing hashes, wrong title, redump page was updated, etc.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        **Note:** Rechecks are processed daily, up to a fixed budget. If many requests are open, yours may be queued for the next run.

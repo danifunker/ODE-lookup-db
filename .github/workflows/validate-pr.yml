@@ -1,0 +1,29 @@
+name: Validate PR
+
+on:
+  pull_request:
+    paths:
+      - "data/redump.jsonl.gz"
+      - "schema/**"
+      - "src/**"
+      - "scripts/**"
+      - "pyproject.toml"
+      - "uv.lock"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          python-version: "3.12"
+      - run: uv sync --extra dev
+      - name: Lint
+        run: uv run ruff check .
+      - name: Tests
+        run: uv run pytest -q
+      - name: Validate JSONL
+        run: uv run scripts/validate.py
+      - name: Build SQLite (smoke)
+        run: uv run scripts/build_sqlite.py --out /tmp/redump.sqlite

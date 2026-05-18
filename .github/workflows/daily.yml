@@ -1,0 +1,118 @@
+name: Daily scrape
+
+on:
+  schedule:
+    - cron: "17 6 * * *"   # 06:17 UTC daily
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Cap on new discs to fetch this run"
+        required: false
+        default: ""
+      allow_deletions:
+        description: "Permit row removals (default: warn only)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: db-write
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330  # under the 6h GHA cap
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: uv sync --extra dev
+
+      - name: Process recheck requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: uv run scripts/recheck.py
+
+      - name: Scrape new discs
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.limit }}" ]; then ARGS="--limit ${{ inputs.limit }}"; fi
+          uv run scripts/scrape.py $ARGS
+
+      - name: Validate
+        run: uv run scripts/validate.py
+
+      - name: Canary
+        run: uv run scripts/canary.py
+
+      - name: Refresh stats
+        run: uv run scripts/stats.py
+
+      - name: Tag previous HEAD for rollback
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          git tag -f "db-good-$DATE" HEAD
+          git push --force origin "db-good-$DATE" || true
+
+      - name: Commit JSONL + stats
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/redump.jsonl.gz data/stats.json
+          if git diff --cached --quiet; then
+            echo "no changes"
+            exit 0
+          fi
+          git commit -m "data: daily scrape $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Build SQLite release artifact
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: uv run scripts/build_sqlite.py
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="db-$(date -u +%Y-%m-%d)"
+          gh release create "$TAG" data/redump.sqlite \
+            --title "Database $TAG" \
+            --notes "Automated daily build. Schema v1." || \
+          gh release upload "$TAG" data/redump.sqlite --clobber
+          # Moving "latest" pointer for stable consumer URL
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest data/redump.sqlite \
+            --title "Latest" \
+            --notes "Always points at the most recent successful build."
+
+      - name: File issue on warnings
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f data/warnings.json ] && [ "$(jq '.warnings | length' data/warnings.json)" -gt 0 ]; then
+            BODY=$(jq -r '.warnings | join("\n\n")' data/warnings.json)
+            gh issue create \
+              --title "Daily scrape warnings: $(date -u +%Y-%m-%d)" \
+              --label "automated,warning" \
+              --body "$BODY"
+          fi
+
+      - name: File issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Daily scrape FAILED: $(date -u +%Y-%m-%d)" \
+            --label "automated,bug" \
+            --body "Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

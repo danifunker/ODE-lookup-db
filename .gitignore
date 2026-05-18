@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Built artifact — released, not committed
+data/redump.sqlite
+
+# Local scratch
+.DS_Store
+*.swp
+.idea/
+.vscode/

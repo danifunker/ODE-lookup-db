@@ -1,0 +1,260 @@
+{
+  "category": "Games",
+  "date_added": "2022-12-05 21:23",
+  "date_last_modified": "2022-12-05 21:23",
+  "disc_structure": {
+    "ifpi": "L383",
+    "layer_break": null,
+    "mould_sid": "IFPI 6100",
+    "ring_mastering_codes": [
+      "1112 CDM3092 A60623-16"
+    ]
+  },
+  "dumpers": [
+    "JustTheMan"
+  ],
+  "edition": "Original",
+  "languages": [
+    "en"
+  ],
+  "languages_raw": [
+    "English"
+  ],
+  "redump_id": 99835,
+  "redump_url": "http://redump.org/disc/99835/",
+  "region": [
+    "USA"
+  ],
+  "schema_version": 1,
+  "serials": [
+    "CDM-3092-101-U3"
+  ],
+  "system": "mac",
+  "title": "MechWarrior 2: 31st Century Combat",
+  "tracks": [
+    {
+      "crc32": "272defe8",
+      "md5": "1267be089821cfb5922c4d027f892991",
+      "number": 1,
+      "sha1": "a885a11c44c54620d88bb8da94a58720216919a9",
+      "size_bytes": 143116848,
+      "type": "data"
+    },
+    {
+      "crc32": "741c5854",
+      "md5": "4cd35c53e7f76e8478572a1946f1107e",
+      "number": 2,
+      "sha1": "5050acb9986eef861c595c91e1a487eae4079182",
+      "size_bytes": 24310272,
+      "type": "audio"
+    },
+    {
+      "crc32": "ca818222",
+      "md5": "1c6d75a2eab483bd5990ad3f46c6d9bb",
+      "number": 3,
+      "sha1": "f47bd027605793f3c4a911a7354029024c072967",
+      "size_bytes": 25232256,
+      "type": "audio"
+    },
+    {
+      "crc32": "aaab8789",
+      "md5": "dfc04e2edd42b3e85da5fde535e3dbc5",
+      "number": 4,
+      "sha1": "f6d377f7cded6b0bebdbd1360a1e948d356c23df",
+      "size_bytes": 20290704,
+      "type": "audio"
+    },
+    {
+      "crc32": "60f76804",
+      "md5": "0e8936a176e667c6141fe35d6025c728",
+      "number": 5,
+      "sha1": "089a2553bf52b0cafee39a45d6087faa04347ca8",
+      "size_bytes": 18265632,
+      "type": "audio"
+    },
+    {
+      "crc32": "a3cc81ae",
+      "md5": "5e0e4a4ecfd0d3701a3a5486a9537a21",
+      "number": 6,
+      "sha1": "a8f793fdf6fcd7410d7bffcb966b323baff44b9f",
+      "size_bytes": 24881808,
+      "type": "audio"
+    },
+    {
+      "crc32": "76af3fe7",
+      "md5": "7f3140aecd649abf2c132f79b65e5938",
+      "number": 7,
+      "sha1": "5b246287912bd99a02354cf2d665db51c741c710",
+      "size_bytes": 19380480,
+      "type": "audio"
+    },
+    {
+      "crc32": "096fc073",
+      "md5": "bb3654588a35afe9bd3bf12a81ddfe65",
+      "number": 8,
+      "sha1": "cc866f3996d4e21017e8ac8b7c33aa0469d7e749",
+      "size_bytes": 23665824,
+      "type": "audio"
+    },
+    {
+      "crc32": "a48f2bd1",
+      "md5": "85ef28b54c4469e5d009476d63ddcf79",
+      "number": 9,
+      "sha1": "c5c74555ea07e29d54b94690726b747a51519585",
+      "size_bytes": 18524352,
+      "type": "audio"
+    },
+    {
+      "crc32": "2876b365",
+      "md5": "d05b85283a0c0adb334572309883cada",
+      "number": 10,
+      "sha1": "ccf612c3c752f462f4df1729f4f5df8ae60ccc4a",
+      "size_bytes": 24068016,
+      "type": "audio"
+    },
+    {
+      "crc32": "83149cd3",
+      "md5": "b9cee21b98868397bb0499142483bcb2",
+      "number": 11,
+      "sha1": "232b558677a56cc362a53b988f8a32ce12e65aa1",
+      "size_bytes": 25930800,
+      "type": "audio"
+    },
+    {
+      "crc32": "07fb8222",
+      "md5": "c2c6ee3406c5c07fdb03a04ee5e722cd",
+      "number": 12,
+      "sha1": "3e004de03676c4266e11556adfc0ea5e907f3a2d",
+      "size_bytes": 23903376,
+      "type": "audio"
+    },
+    {
+      "crc32": "1282564c",
+      "md5": "dc0849715ce2c480fb594cbf60e7bf7a",
+      "number": 13,
+      "sha1": "ed97c2dcaa65dc88a90d9b8ea6bc768447729420",
+      "size_bytes": 23985696,
+      "type": "audio"
+    },
+    {
+      "crc32": "65e3c105",
+      "md5": "70a608c42258e32d63820bbd873f4bd6",
+      "number": 14,
+      "sha1": "4e34f485dfc082dc7e3dc37826e545981b6debd5",
+      "size_bytes": 26055456,
+      "type": "audio"
+    },
+    {
+      "crc32": "a0bc6617",
+      "md5": "23d7a458d341901a220dbcbb75bc5036",
+      "number": 15,
+      "sha1": "fba0d25e0fb26f094561fa4888d52bbb9f70ba4a",
+      "size_bytes": 24672480,
+      "type": "audio"
+    },
+    {
+      "crc32": "2e6888ea",
+      "md5": "16dc0dd3eaf5087531ff9381579c6d09",
+      "number": 16,
+      "sha1": "0990f696a0ecb9ed006574771838713146dc984b",
+      "size_bytes": 22339296,
+      "type": "audio"
+    },
+    {
+      "crc32": "01056ac1",
+      "md5": "92f10b01ad2805ffa2aaa681659fd487",
+      "number": 17,
+      "sha1": "c40a6eadd28bb0aff20340a112a519aad594cd45",
+      "size_bytes": 33551280,
+      "type": "audio"
+    },
+    {
+      "crc32": "344f96dd",
+      "md5": "3e91c6c872e8bec94fb473d1685e9edf",
+      "number": 18,
+      "sha1": "99b6cae82dcaf6d19f3364f112e8bd95a6e881e3",
+      "size_bytes": 21497280,
+      "type": "audio"
+    },
+    {
+      "crc32": "5a4f82c9",
+      "md5": "fe6d56d6cdf735a862c632ad7e587db6",
+      "number": 19,
+      "sha1": "b65d44b9b2e092bca6b9845d8677d6a216ac83ed",
+      "size_bytes": 28249872,
+      "type": "audio"
+    },
+    {
+      "crc32": "78c64682",
+      "md5": "b5af54666baf007ae1c36853721fac03",
+      "number": 20,
+      "sha1": "60f31e1572d21e4de94031841140710b5db12dfb",
+      "size_bytes": 24752448,
+      "type": "audio"
+    },
+    {
+      "crc32": "20435417",
+      "md5": "530ee65b77f979a71f515807621d3ce4",
+      "number": 21,
+      "sha1": "2c867ddd102a80680689ea5d38a17a9d9829ba31",
+      "size_bytes": 22790880,
+      "type": "audio"
+    },
+    {
+      "crc32": "85c3ce79",
+      "md5": "038e04f050e326e751b4c757e7577e25",
+      "number": 22,
+      "sha1": "99a6a053550300f0cf0eb16506956dd751917d3b",
+      "size_bytes": 22475712,
+      "type": "audio"
+    },
+    {
+      "crc32": "c0d422d7",
+      "md5": "4925af359168418614133d41fbaa720e",
+      "number": 23,
+      "sha1": "feb68e9ea396fe36d6eebe84cce46d561e38697f",
+      "size_bytes": 20963376,
+      "type": "audio"
+    },
+    {
+      "crc32": "1c63d31e",
+      "md5": "4e68bd1ef9901eaf84509fbb923aeef2",
+      "number": 24,
+      "sha1": "d001e3f18d173904d533f76727729ee154933fed",
+      "size_bytes": 32330592,
+      "type": "audio"
+    },
+    {
+      "crc32": "7abdfd5a",
+      "md5": "1a1fded668596ce37d8f659357bd88d8",
+      "number": 25,
+      "sha1": "175c0a29db3240639ec7f6495cbce2dd9f28660f",
+      "size_bytes": 22783824,
+      "type": "audio"
+    },
+    {
+      "crc32": "332f0f16",
+      "md5": "9d1b6ecb05522db522e82acdf85ef947",
+      "number": 26,
+      "sha1": "5e95adcd44d922db19d49dc63322e5d18d39f249",
+      "size_bytes": 21163296,
+      "type": "audio"
+    },
+    {
+      "crc32": "a71495a8",
+      "md5": "861d82e52472acfdc2d0957ac36cd336",
+      "number": 27,
+      "sha1": "2edad93146c78fc5204c84d592ae623d1d80b964",
+      "size_bytes": 1321824,
+      "type": "audio"
+    },
+    {
+      "crc32": "cb94faab",
+      "md5": "a123d2257c3b3ce18212e41cc81b3dd9",
+      "number": 28,
+      "sha1": "a870389514c96bd5f786bc56080d5bbcd7a603b4",
+      "size_bytes": 22454544,
+      "type": "audio"
+    }
+  ]
+}
