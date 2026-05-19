@@ -30,10 +30,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from ode_lookup_db.db import JSONL_PATH, read_jsonl, write_jsonl  # noqa: E402
 from ode_lookup_db.http_client import RedumpClient  # noqa: E402
 from ode_lookup_db.parser import ParseError, parse_disc_page  # noqa: E402
-from ode_lookup_db.scraper import SYSTEM_SLUGS, discover_disc_ids  # noqa: E402
+from ode_lookup_db.scraper import (  # noqa: E402
+    SYSTEM_SLUGS,
+    discover_disc_ids,
+    discover_recent_added,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DISCOVERY_PATH = REPO_ROOT / "data" / "discovery.json"
+CHECKPOINT_PATH = REPO_ROOT / "data" / "discovery_checkpoint.json"
 
 
 def load_discovery() -> dict[str, list[int]] | None:
@@ -45,6 +50,22 @@ def load_discovery() -> dict[str, list[int]] | None:
 def save_discovery(data: dict[str, list[int]]) -> None:
     DISCOVERY_PATH.parent.mkdir(parents=True, exist_ok=True)
     DISCOVERY_PATH.write_text(json.dumps(data, indent=2))
+
+
+def load_checkpoint() -> int | None:
+    if not CHECKPOINT_PATH.exists():
+        return None
+    data = json.loads(CHECKPOINT_PATH.read_text())
+    return data.get("topmost_redump_id")
+
+
+def save_checkpoint(topmost_redump_id: int) -> None:
+    from datetime import datetime, timezone
+    CHECKPOINT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    CHECKPOINT_PATH.write_text(json.dumps({
+        "topmost_redump_id": topmost_redump_id,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }, indent=2) + "\n")
 
 
 def main() -> int:
@@ -69,6 +90,15 @@ def main() -> int:
              "to 1/sec; workers just stop us blocking on slow responses.",
     )
     ap.add_argument("--refresh-discovery", action="store_true", help="Rebuild discovery cache")
+    ap.add_argument(
+        "--full-discovery", action="store_true",
+        help="Use legacy per-system listing walk instead of the added-desc checkpoint. "
+             "Slow (~120 pages); use only for seed runs or to rebuild from scratch.",
+    )
+    ap.add_argument(
+        "--max-added-desc-pages", type=int, default=50,
+        help="Cap on /discs/sort/added/dir/desc pages walked when using checkpoint discovery.",
+    )
     args = ap.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -80,47 +110,58 @@ def main() -> int:
     log.info("loaded %d existing rows", len(rows_by_id))
 
     with RedumpClient() as client:
-        # --- Discovery (cached) -------------------------------------------------
-        cached = None if args.refresh_discovery else load_discovery()
-        discovery: dict[str, list[int]] = {} if cached is None else dict(cached)
-        known_ids = set(rows_by_id.keys())
-        # When --limit is set, stop discovery early once we have enough
-        # unknown IDs. Otherwise (bulk run), walk until the listing ends.
-        # Add a small buffer so failed parses don't shortchange the budget.
-        target = (args.limit + 50) if args.limit is not None else None
-
-        # Walk listing pages for any requested system that isn't already cached.
-        # Auto-extending the cache means `--systems mac` followed by `--systems pc`
-        # doesn't drop Mac's cached IDs.
-        missing = [s for s in args.systems if s not in discovery]
-        if cached is not None and not missing:
-            log.info("using cached discovery (%s); pass --refresh-discovery to rebuild",
-                     {s: len(v) for s, v in discovery.items()})
-        else:
-            if cached is not None and missing:
-                log.info("cache has %s; walking listing pages for missing: %s",
-                         list(cached.keys()), missing)
-            for system in args.systems:
-                if system in discovery and cached is not None:
-                    continue
-                ids = [
-                    rid for rid, _ in discover_disc_ids(
-                        client, system,
-                        max_pages=args.max_pages,
-                        known_ids=known_ids,
-                        target_unknown=target,
-                    )
-                ]
-                discovery[system] = ids
-            save_discovery(discovery)
-            log.info("discovery cached at %s", DISCOVERY_PATH)
-
-        # --- Build target list (new IDs only) ----------------------------------
+        # --- Discovery ----------------------------------------------------------
         targets: list[tuple[int, str]] = []
-        for system in args.systems:
-            for rid in discovery.get(system, []):
+        new_checkpoint: int | None = None
+        if args.full_discovery:
+            # Legacy path: per-system listing walk. Slow but exhaustive.
+            cached = None if args.refresh_discovery else load_discovery()
+            discovery: dict[str, list[int]] = {} if cached is None else dict(cached)
+            known_ids = set(rows_by_id.keys())
+            target = (args.limit + 50) if args.limit is not None else None
+            missing = [s for s in args.systems if s not in discovery]
+            if cached is not None and not missing:
+                log.info("using cached discovery (%s); pass --refresh-discovery to rebuild",
+                         {s: len(v) for s, v in discovery.items()})
+            else:
+                if cached is not None and missing:
+                    log.info("cache has %s; walking listing pages for missing: %s",
+                             list(cached.keys()), missing)
+                for system in args.systems:
+                    if system in discovery and cached is not None:
+                        continue
+                    ids = [
+                        rid for rid, _ in discover_disc_ids(
+                            client, system,
+                            max_pages=args.max_pages,
+                            known_ids=known_ids,
+                            target_unknown=target,
+                        )
+                    ]
+                    discovery[system] = ids
+                save_discovery(discovery)
+                log.info("discovery cached at %s", DISCOVERY_PATH)
+            for system in args.systems:
+                for rid in discovery.get(system, []):
+                    if rid not in rows_by_id:
+                        targets.append((rid, system))
+        else:
+            # Default path: walk added-desc newest-first until we hit checkpoint.
+            checkpoint_id = load_checkpoint()
+            log.info("discovery via added-desc (checkpoint=%s)", checkpoint_id)
+            recent, new_checkpoint = discover_recent_added(
+                client,
+                systems=set(args.systems),
+                checkpoint_id=checkpoint_id,
+                max_pages=args.max_added_desc_pages,
+            )
+            # Filter to IDs not already in JSONL (defensive: handles overlap or
+            # the bootstrap case where checkpoint is missing and we walk back
+            # over already-known discs).
+            for rid, system in recent:
                 if rid not in rows_by_id:
                     targets.append((rid, system))
+
         if args.limit is not None:
             targets = targets[: args.limit]
         total = len(targets)
@@ -200,6 +241,14 @@ def main() -> int:
 
         if dirty:
             write_jsonl(rows_by_id.values())
+
+    # Persist the added-desc checkpoint only after a clean run, so a partial
+    # failure doesn't move the marker past unprocessed discs.
+    if new_checkpoint is not None and failed == 0:
+        save_checkpoint(new_checkpoint)
+        log.info("checkpoint updated: topmost_redump_id=%d", new_checkpoint)
+    elif new_checkpoint is not None:
+        log.warning("not updating checkpoint (failed=%d): will retry next run", failed)
 
     log.info(
         "done: fetched=%d parsed=%d failed=%d, total rows=%d",

@@ -111,6 +111,43 @@ def extract_disc_ids_from_system_page(html: str) -> list[int]:
     return ids
 
 
+def extract_rows_from_added_desc_page(html: str) -> list[tuple[int, str]]:
+    """Return [(redump_id, system_label), ...] from /discs/sort/added/dir/desc/, newest-first.
+
+    `system_label` is the raw uppercase text from the System column (e.g. "PC", "MAC").
+    Caller is responsible for filtering to in-scope systems.
+    """
+    tree = HTMLParser(html)
+    rows: list[tuple[int, str]] = []
+    seen: set[int] = set()
+    for table in tree.css("table"):
+        trs = table.css("tr")
+        if not trs:
+            continue
+        headers = [th.text(strip=True) for th in trs[0].css("th")]
+        if not headers or "System" not in headers:
+            continue
+        sys_idx = headers.index("System")
+        for tr in trs[1:]:
+            tds = tr.css("td")
+            if len(tds) <= sys_idx:
+                continue
+            a = tr.css_first("a")
+            if not a:
+                continue
+            href = a.attributes.get("href") or ""
+            m = re.match(r"^/disc/(\d+)/?$", href)
+            if not m:
+                continue
+            rid = int(m.group(1))
+            if rid in seen:
+                continue
+            seen.add(rid)
+            rows.append((rid, tds[sys_idx].text(strip=True)))
+        break  # only the first matching table
+    return rows
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

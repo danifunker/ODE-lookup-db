@@ -88,3 +88,7 @@ class RedumpClient:
     def get_system_page(self, system_slug: str, page: int = 1) -> httpx.Response:
         # Redump system listings: http://redump.org/discs/system/<slug>/?page=N
         return self.get(f"/discs/system/{system_slug}/?page={page}")
+
+    def get_added_desc_page(self, page: int = 1) -> httpx.Response:
+        # All-systems listing, newest-added first: http://redump.org/discs/sort/added/dir/desc/?page=N
+        return self.get(f"/discs/sort/added/dir/desc/?page={page}")
