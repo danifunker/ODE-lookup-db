@@ -28,6 +28,8 @@ jobs:
     timeout-minutes: 330  # under the 6h GHA cap
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - uses: astral-sh/setup-uv@v3
         with:
