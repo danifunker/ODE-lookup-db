@@ -51,6 +51,10 @@ def test_sqlite_build_and_lookup(tmp_path: Path):
         cur = conn.execute("SELECT redump_id FROM tracks WHERE sha1=?", ("b" * 40,))
         assert sorted(r[0] for r in cur.fetchall()) == [1, 2]
 
+        # tracks renamed type -> kind
+        cur = conn.execute("SELECT kind FROM tracks WHERE redump_id=1")
+        assert cur.fetchone()[0] == "data"
+
         # lookup by serial
         cur = conn.execute("SELECT redump_id FROM serials WHERE serial=?", ("SER-2",))
         assert cur.fetchone()[0] == 2
@@ -59,10 +63,21 @@ def test_sqlite_build_and_lookup(tmp_path: Path):
         cur = conn.execute("SELECT redump_id FROM discs WHERE pvd_volume_id=?", ("VOL_1",))
         assert cur.fetchone()[0] == 1
 
-        # meta
-        meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
-        assert meta["schema_version"] == "1"
-        assert meta["source_commit"] == "abc123"
-        assert meta["row_count"] == "2"
+        # languages renamed code -> lang
+        cur = conn.execute("SELECT lang FROM languages WHERE redump_id=1")
+        assert cur.fetchone()[0] == "en"
+
+        # meta is a single row with named columns
+        row = conn.execute(
+            "SELECT schema_version, source_commit, row_count FROM meta"
+        ).fetchone()
+        assert row == (1, "abc123", 2)
+
+        # FTS5 over titles
+        cur = conn.execute(
+            "SELECT rowid FROM discs_fts WHERE discs_fts MATCH ? ORDER BY rank",
+            ("Disc",),
+        )
+        assert sorted(r[0] for r in cur.fetchall()) == [1, 2]
     finally:
         conn.close()

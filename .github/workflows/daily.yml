@@ -81,20 +81,36 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
         run: uv run scripts/build_sqlite.py
 
+      - name: Validate SQLite artifact
+        run: uv run scripts/validate_sqlite.py
+
+      - name: Compress release artifact
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          zstd --ultra -22 --long=27 -f -o data/redump.sqlite.zst data/redump.sqlite
+          sha256sum data/redump.sqlite      > data/redump.sqlite.sha256
+          sha256sum data/redump.sqlite.zst  > data/redump.sqlite.zst.sha256
+          ls -lh data/redump.sqlite data/redump.sqlite.zst
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="db-$(date -u +%Y-%m-%d)"
-          gh release create "$TAG" data/redump.sqlite \
+          ASSETS=(
+            data/redump.sqlite.zst
+            data/redump.sqlite.zst.sha256
+            data/redump.sqlite.sha256
+          )
+          gh release create "$TAG" "${ASSETS[@]}" \
             --title "Database $TAG" \
-            --notes "Automated daily build. Schema v1." || \
-          gh release upload "$TAG" data/redump.sqlite --clobber
+            --notes "Automated daily build. Schema v1. Decompress with: zstd -d redump.sqlite.zst" || \
+          gh release upload "$TAG" "${ASSETS[@]}" --clobber
           # Moving "latest" pointer for stable consumer URL
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest data/redump.sqlite \
+          gh release create latest "${ASSETS[@]}" \
             --title "Latest" \
-            --notes "Always points at the most recent successful build."
+            --notes "Always points at the most recent successful build. Decompress with: zstd -d redump.sqlite.zst"
 
       - name: File issue on warnings
         if: always()

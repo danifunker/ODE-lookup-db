@@ -43,6 +43,17 @@ def write_jsonl(rows: Iterable[dict[str, Any]], path: Path = JSONL_PATH) -> int:
     return count
 
 
+def _nn(v: Any) -> Any:
+    """Coerce empty strings to NULL; pass everything else through."""
+    if isinstance(v, str) and v == "":
+        return None
+    return v
+
+
+def _lower_hex(v: Any) -> Any:
+    return v.lower() if isinstance(v, str) else v
+
+
 def build_sqlite(
     rows: Iterable[dict[str, Any]],
     *,
@@ -51,9 +62,10 @@ def build_sqlite(
 ) -> int:
     """Rebuild SQLite from rows. Returns row count.
 
-    Schema is denormalized for fast lookup: one row per disc, plus a tracks table
-    with hash indexes. Designed for read-only consumers querying by hash, serial,
-    or PVD volume label.
+    Schema matches the consumer-facing spec (v1): one row per disc, side tables
+    for hashes/serials/regions/languages/artwork, FTS5 over titles + PVD volume id.
+    Consumers query promoted columns + side tables only; the JSONL remains the
+    source of truth for any future fields that need promotion.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
@@ -61,66 +73,99 @@ def build_sqlite(
 
     conn = sqlite3.connect(path)
     try:
+        conn.execute("PRAGMA page_size = 4096")
+        conn.execute("PRAGMA journal_mode = OFF")
         conn.executescript(
             """
             CREATE TABLE meta (
-                key   TEXT PRIMARY KEY,
-                value TEXT NOT NULL
+                schema_version  INTEGER NOT NULL,
+                built_at        TEXT    NOT NULL,
+                source_commit   TEXT,
+                row_count       INTEGER NOT NULL
             );
 
             CREATE TABLE discs (
                 redump_id          INTEGER PRIMARY KEY,
-                system             TEXT NOT NULL,
-                title              TEXT NOT NULL,
+                system             TEXT    NOT NULL,
+                title              TEXT    NOT NULL,
                 foreign_title      TEXT,
                 edition            TEXT,
                 version            TEXT,
-                barcode            TEXT,
                 category           TEXT,
-                cuesheet_sha1      TEXT,
-                redump_url         TEXT NOT NULL,
-                date_added         TEXT,
-                date_last_modified TEXT,
+                media              TEXT,
+                barcode            TEXT,
                 pvd_volume_id      TEXT,
                 pvd_system_id      TEXT,
-                json               TEXT NOT NULL
+                pvd_creation_date  TEXT,
+                date_added         TEXT,
+                date_last_modified TEXT,
+                redump_url         TEXT    NOT NULL
             );
+            CREATE INDEX idx_discs_barcode       ON discs(barcode)       WHERE barcode IS NOT NULL;
+            CREATE INDEX idx_discs_pvd_volume_id ON discs(pvd_volume_id) WHERE pvd_volume_id IS NOT NULL;
+            CREATE INDEX idx_discs_title_nocase  ON discs(title COLLATE NOCASE);
+            CREATE INDEX idx_discs_system        ON discs(system);
 
             CREATE TABLE tracks (
-                redump_id INTEGER NOT NULL REFERENCES discs(redump_id),
-                number    INTEGER NOT NULL,
-                type      TEXT,
-                size_bytes INTEGER,
-                crc32     TEXT,
-                md5       TEXT,
-                sha1      TEXT,
+                redump_id   INTEGER NOT NULL REFERENCES discs(redump_id) ON DELETE CASCADE,
+                number      INTEGER NOT NULL,
+                kind        TEXT,
+                size_bytes  INTEGER,
+                crc32       TEXT,
+                md5         TEXT,
+                sha1        TEXT,
                 PRIMARY KEY (redump_id, number)
-            );
+            ) WITHOUT ROWID;
+            CREATE INDEX idx_tracks_sha1  ON tracks(sha1)  WHERE sha1  IS NOT NULL;
+            CREATE INDEX idx_tracks_md5   ON tracks(md5)   WHERE md5   IS NOT NULL;
+            CREATE INDEX idx_tracks_crc32 ON tracks(crc32) WHERE crc32 IS NOT NULL;
 
             CREATE TABLE serials (
-                redump_id INTEGER NOT NULL REFERENCES discs(redump_id),
-                serial    TEXT NOT NULL
-            );
+                redump_id INTEGER NOT NULL REFERENCES discs(redump_id) ON DELETE CASCADE,
+                serial    TEXT    NOT NULL,
+                PRIMARY KEY (redump_id, serial)
+            ) WITHOUT ROWID;
+            CREATE INDEX idx_serials_serial ON serials(serial);
 
             CREATE TABLE regions (
-                redump_id INTEGER NOT NULL REFERENCES discs(redump_id),
-                region    TEXT NOT NULL
-            );
+                redump_id INTEGER NOT NULL REFERENCES discs(redump_id) ON DELETE CASCADE,
+                region    TEXT    NOT NULL,
+                PRIMARY KEY (redump_id, region)
+            ) WITHOUT ROWID;
 
             CREATE TABLE languages (
-                redump_id INTEGER NOT NULL REFERENCES discs(redump_id),
-                code      TEXT NOT NULL
-            );
+                redump_id INTEGER NOT NULL REFERENCES discs(redump_id) ON DELETE CASCADE,
+                lang      TEXT    NOT NULL,
+                PRIMARY KEY (redump_id, lang)
+            ) WITHOUT ROWID;
 
-            CREATE INDEX idx_tracks_crc32 ON tracks(crc32);
-            CREATE INDEX idx_tracks_md5   ON tracks(md5);
-            CREATE INDEX idx_tracks_sha1  ON tracks(sha1);
-            CREATE INDEX idx_serials      ON serials(serial);
-            CREATE INDEX idx_disc_pvd     ON discs(pvd_volume_id);
-            CREATE INDEX idx_disc_system_title ON discs(system, title);
+            CREATE TABLE artwork (
+                redump_id    INTEGER NOT NULL REFERENCES discs(redump_id) ON DELETE CASCADE,
+                kind         TEXT    NOT NULL CHECK (kind IN ('front','back','disc','manual','other')),
+                seq          INTEGER NOT NULL DEFAULT 0,
+                archive_url  TEXT    NOT NULL,
+                source       TEXT,
+                sha256       TEXT,
+                width        INTEGER,
+                height       INTEGER,
+                format       TEXT,
+                bytes        INTEGER,
+                license      TEXT,
+                added        TEXT,
+                PRIMARY KEY (redump_id, kind, seq)
+            ) WITHOUT ROWID;
+            CREATE INDEX idx_artwork_sha256 ON artwork(sha256) WHERE sha256 IS NOT NULL;
+
+            CREATE VIRTUAL TABLE discs_fts USING fts5(
+                title, foreign_title, pvd_volume_id,
+                content='discs',
+                content_rowid='redump_id',
+                tokenize='unicode61 remove_diacritics 2'
+            );
             """
         )
 
+        conn.execute("BEGIN")
         count = 0
         for row in rows:
             pvd = row.get("pvd") or {}
@@ -130,51 +175,75 @@ def build_sqlite(
                     row["redump_id"],
                     row["system"],
                     row["title"],
-                    row.get("foreign_title"),
-                    row.get("edition"),
-                    row.get("version"),
-                    row.get("barcode"),
-                    row.get("category"),
-                    row.get("cuesheet_sha1"),
+                    _nn(row.get("foreign_title")),
+                    _nn(row.get("edition")),
+                    _nn(row.get("version")),
+                    _nn(row.get("category")),
+                    _nn(row.get("media")),
+                    _nn(row.get("barcode")),
+                    _nn(pvd.get("volume_identifier")),
+                    _nn(pvd.get("system_identifier")),
+                    _nn(pvd.get("creation_date")),
+                    _nn(row.get("date_added")),
+                    _nn(row.get("date_last_modified")),
                     row["redump_url"],
-                    row.get("date_added"),
-                    row.get("date_last_modified"),
-                    pvd.get("volume_identifier"),
-                    pvd.get("system_identifier"),
-                    orjson.dumps(row).decode("utf-8"),
                 ),
             )
-            for t in row.get("tracks", []):
+            for t in row.get("tracks") or []:
                 conn.execute(
                     "INSERT INTO tracks VALUES (?,?,?,?,?,?,?)",
                     (
                         row["redump_id"],
                         t["number"],
-                        t.get("type"),
+                        _nn(t.get("type")),
                         t.get("size_bytes"),
-                        t.get("crc32"),
-                        t.get("md5"),
-                        t.get("sha1"),
+                        _lower_hex(_nn(t.get("crc32"))),
+                        _lower_hex(_nn(t.get("md5"))),
+                        _lower_hex(_nn(t.get("sha1"))),
                     ),
                 )
-            for s in row.get("serials", []):
-                conn.execute("INSERT INTO serials VALUES (?,?)", (row["redump_id"], s))
-            for r in row.get("region", []):
-                conn.execute("INSERT INTO regions VALUES (?,?)", (row["redump_id"], r))
-            for code in row.get("languages", []):
-                conn.execute("INSERT INTO languages VALUES (?,?)", (row["redump_id"], code))
+            for s in row.get("serials") or []:
+                if _nn(s) is not None:
+                    conn.execute(
+                        "INSERT OR IGNORE INTO serials VALUES (?,?)", (row["redump_id"], s)
+                    )
+            for r in row.get("region") or []:
+                if _nn(r) is not None:
+                    conn.execute(
+                        "INSERT OR IGNORE INTO regions VALUES (?,?)", (row["redump_id"], r)
+                    )
+            for code in row.get("languages") or []:
+                if _nn(code) is not None:
+                    conn.execute(
+                        "INSERT OR IGNORE INTO languages VALUES (?,?)",
+                        (row["redump_id"], code),
+                    )
             count += 1
 
-        conn.executemany(
-            "INSERT INTO meta(key,value) VALUES(?,?)",
-            [
-                ("schema_version", str(SCHEMA_VERSION)),
-                ("built_at", datetime.now(UTC).isoformat()),
-                ("source_commit", source_commit or ""),
-                ("row_count", str(count)),
-            ],
+        conn.execute(
+            """
+            INSERT INTO discs_fts(rowid, title, foreign_title, pvd_volume_id)
+            SELECT redump_id,
+                   title,
+                   COALESCE(foreign_title, ''),
+                   COALESCE(pvd_volume_id, '')
+            FROM discs
+            """
         )
+
+        conn.execute(
+            "INSERT INTO meta(schema_version, built_at, source_commit, row_count) VALUES (?,?,?,?)",
+            (
+                SCHEMA_VERSION,
+                datetime.now(UTC).isoformat(),
+                source_commit or None,
+                count,
+            ),
+        )
+
+        conn.execute("ANALYZE")
         conn.commit()
+        conn.execute("VACUUM")
     finally:
         conn.close()
 
