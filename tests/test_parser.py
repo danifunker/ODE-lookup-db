@@ -70,3 +70,76 @@ def test_fixture_passes_schema_validation(redump_id: int, system: str):
     row = parse_disc_page(html, redump_id=redump_id, system=system)
     report = validate_rows([row])
     assert report.ok, report.hard_errors
+
+
+def _parse(redump_id: int, system: str) -> dict:
+    html = (FIXTURES / f"{redump_id}.html").read_text()
+    return parse_disc_page(html, redump_id=redump_id, system=system)
+
+
+@pytest.mark.parametrize(
+    "redump_id,system,expected",
+    [(133379, "pc", "MYST_UK"), (92225, "pc", "007LEGENDS")],
+)
+def test_volume_label_positive(redump_id: int, system: str, expected: str):
+    row = _parse(redump_id, system)
+    assert row["pvd"]["volume_identifier"] == expected
+
+
+@pytest.mark.parametrize("redump_id,system", [(99835, "mac"), (16345, "pc"), (27832, "pc")])
+def test_volume_label_absent(redump_id: int, system: str):
+    row = _parse(redump_id, system)
+    assert (row.get("pvd") or {}).get("volume_identifier") is None
+
+
+def test_catalog_all_zero_placeholder_is_none():
+    # 27832 carries "CATALOG 0000000000000" — a placeholder, not a real catalog.
+    row = _parse(27832, "pc")
+    assert row.get("catalog") is None
+
+
+def test_catalog_real_value_parses():
+    html = """
+    <html><body><div id="main"><h1>Synthetic</h1>
+      <table class="gamecomments">
+        <tr><th>Metadata</th></tr>
+        <tr><td>CATALOG 1234567890123</td></tr>
+      </table>
+      <table class="tracks">
+        <tr><th>#</th><th>Type</th><th>Pregap</th><th>Length</th><th>Sectors</th>
+            <th>Size</th><th>CRC-32</th><th>MD5</th><th>SHA-1</th></tr>
+        <tr><td>1</td><td>Data/Mode 1</td><td>00:00:00</td><td>10:00:00</td>
+            <td>1000</td><td>2352000</td><td>deadbeef</td>
+            <td>%s</td><td>%s</td></tr>
+      </table>
+    </div></body></html>
+    """ % ("a" * 32, "b" * 40)
+    row = parse_disc_page(html, redump_id=1, system="pc")
+    assert row["catalog"] == "1234567890123"
+
+
+def test_volume_label_first_wins():
+    html = """
+    <html><body><div id="main"><h1>Synthetic</h1>
+      <table class="gamecomments">
+        <tr><th>Comments</th></tr>
+        <tr><td><b>Volume Label</b>: FIRST_LABEL<br />
+                <b>Volume Label</b>: SECOND_LABEL</td></tr>
+      </table>
+      <table class="tracks">
+        <tr><th>#</th><th>Type</th><th>Pregap</th><th>Length</th><th>Sectors</th>
+            <th>Size</th><th>CRC-32</th><th>MD5</th><th>SHA-1</th></tr>
+        <tr><td>1</td><td>Data/Mode 1</td><td>00:00:00</td><td>10:00:00</td>
+            <td>1000</td><td>2352000</td><td>deadbeef</td>
+            <td>%s</td><td>%s</td></tr>
+      </table>
+    </div></body></html>
+    """ % ("a" * 32, "b" * 40)
+    row = parse_disc_page(html, redump_id=1, system="pc")
+    assert row["pvd"]["volume_identifier"] == "FIRST_LABEL"
+
+
+def test_track_sectors_captured():
+    # 133379 single data track lists 312161 sectors in the HTML.
+    row = _parse(133379, "pc")
+    assert row["tracks"][0]["sectors"] == 312161

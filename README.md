@@ -71,6 +71,59 @@ uv run scripts/build_sqlite.py
 sqlite3 data/redump.sqlite '.schema'
 ```
 
+### Seeding from scratch
+
+A full re-seed is needed after a parser/schema change, because `scrape.py` skips
+any `redump_id` already present in `data/redump.jsonl`. To re-fetch everything
+through the current parser, start from an empty source file:
+
+```bash
+# 1. Clear the existing data (it's Git LFS-tracked; a content replacement needs
+#    no LFS surgery — the .gitattributes rule re-applies on the next `git add`).
+git rm data/redump.jsonl
+
+# 2. Exhaustive walk of every PC/Mac listing page (not the added-desc checkpoint).
+uv run scripts/scrape.py --full-discovery
+
+# 3. Validate and build.
+uv run scripts/validate.py
+uv run scripts/build_sqlite.py
+```
+
+#### Manually setting the discovery checkpoint
+
+The daily cron uses the **added-desc** discovery path, which walks redump's
+newest-first listing and stops once it reaches `topmost_redump_id` in
+`data/discovery_checkpoint.json`. A `--full-discovery` seed does **not** update
+this file, so after a from-scratch seed you must set it by hand to the highest
+`redump_id` you captured — otherwise the next cron run re-walks discs you already
+have.
+
+Set it to the max ID in the freshly seeded JSONL:
+
+```bash
+uv run python -c "
+import json, pathlib
+ids = [json.loads(l)['redump_id'] for l in pathlib.Path('data/redump.jsonl').read_text().splitlines() if l.strip()]
+top = max(ids)
+pathlib.Path('data/discovery_checkpoint.json').write_text(json.dumps({'topmost_redump_id': top}, indent=2) + chr(10))
+print('checkpoint set to', top)
+"
+```
+
+The file format is:
+
+```json
+{
+  "topmost_redump_id": 133529,
+  "updated_at": "2026-05-19T17:05:04.627539+00:00"
+}
+```
+
+Only `topmost_redump_id` is required; `updated_at` is informational and is
+refreshed automatically on the next successful cron run. Commit the checkpoint
+alongside the seeded `redump.jsonl`.
+
 ### Repo layout
 
 ```

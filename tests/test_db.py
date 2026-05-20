@@ -12,7 +12,7 @@ from ode_lookup_db.db import build_sqlite, read_jsonl, write_jsonl
 
 def _row(rid: int) -> dict:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "redump_id": rid,
         "system": "pc",
         "title": f"Disc {rid}",
@@ -21,9 +21,10 @@ def _row(rid: int) -> dict:
         "region": ["USA"],
         "languages": ["en"],
         "languages_raw": ["English"],
+        "catalog": f"CAT-{rid}",
         "pvd": {"volume_identifier": f"VOL_{rid}", "system_identifier": "WIN32"},
         "tracks": [
-            {"number": 1, "type": "data", "crc32": "deadbeef",
+            {"number": 1, "type": "data", "sectors": 42, "crc32": "deadbeef",
              "md5": "a" * 32, "sha1": "b" * 40, "size_bytes": 100},
         ],
     }
@@ -55,6 +56,10 @@ def test_sqlite_build_and_lookup(tmp_path: Path):
         cur = conn.execute("SELECT kind FROM tracks WHERE redump_id=1")
         assert cur.fetchone()[0] == "data"
 
+        # tracks.sectors promoted column (v2)
+        cur = conn.execute("SELECT sectors FROM tracks WHERE redump_id=1 AND number=1")
+        assert cur.fetchone()[0] == 42
+
         # lookup by serial
         cur = conn.execute("SELECT redump_id FROM serials WHERE serial=?", ("SER-2",))
         assert cur.fetchone()[0] == 2
@@ -62,6 +67,10 @@ def test_sqlite_build_and_lookup(tmp_path: Path):
         # lookup by PVD
         cur = conn.execute("SELECT redump_id FROM discs WHERE pvd_volume_id=?", ("VOL_1",))
         assert cur.fetchone()[0] == 1
+
+        # lookup by catalog (v2)
+        cur = conn.execute("SELECT redump_id FROM discs WHERE catalog=?", ("CAT-2",))
+        assert cur.fetchone()[0] == 2
 
         # languages renamed code -> lang
         cur = conn.execute("SELECT lang FROM languages WHERE redump_id=1")
@@ -71,7 +80,7 @@ def test_sqlite_build_and_lookup(tmp_path: Path):
         row = conn.execute(
             "SELECT schema_version, source_commit, row_count FROM meta"
         ).fetchone()
-        assert row == (1, "abc123", 2)
+        assert row == (2, "abc123", 2)
 
         # FTS5 over titles
         cur = conn.execute(

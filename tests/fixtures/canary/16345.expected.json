@@ -47,7 +47,7 @@
   "region": [
     "USA"
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "serials": [
     "1414507"
   ],
@@ -58,6 +58,7 @@
       "crc32": "33885420",
       "md5": "79a2de46bce7e25382586af9eeb50a00",
       "number": 1,
+      "sectors": 327176,
       "sha1": "110607211acc363e033cff4d02a6d6729a8e05eb",
       "size_bytes": 769517952,
       "type": "data"

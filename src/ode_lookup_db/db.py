@@ -62,7 +62,7 @@ def build_sqlite(
 ) -> int:
     """Rebuild SQLite from rows. Returns row count.
 
-    Schema matches the consumer-facing spec (v1): one row per disc, side tables
+    Schema matches the consumer-facing spec (v2): one row per disc, side tables
     for hashes/serials/regions/languages/artwork, FTS5 over titles + PVD volume id.
     Consumers query promoted columns + side tables only; the JSONL remains the
     source of truth for any future fields that need promotion.
@@ -94,6 +94,7 @@ def build_sqlite(
                 category           TEXT,
                 media              TEXT,
                 barcode            TEXT,
+                catalog            TEXT,
                 pvd_volume_id      TEXT,
                 pvd_system_id      TEXT,
                 pvd_creation_date  TEXT,
@@ -102,6 +103,7 @@ def build_sqlite(
                 redump_url         TEXT    NOT NULL
             );
             CREATE INDEX idx_discs_barcode       ON discs(barcode)       WHERE barcode IS NOT NULL;
+            CREATE INDEX idx_discs_catalog       ON discs(catalog)       WHERE catalog IS NOT NULL;
             CREATE INDEX idx_discs_pvd_volume_id ON discs(pvd_volume_id) WHERE pvd_volume_id IS NOT NULL;
             CREATE INDEX idx_discs_title_nocase  ON discs(title COLLATE NOCASE);
             CREATE INDEX idx_discs_system        ON discs(system);
@@ -110,6 +112,7 @@ def build_sqlite(
                 redump_id   INTEGER NOT NULL REFERENCES discs(redump_id) ON DELETE CASCADE,
                 number      INTEGER NOT NULL,
                 kind        TEXT,
+                sectors     INTEGER,
                 size_bytes  INTEGER,
                 crc32       TEXT,
                 md5         TEXT,
@@ -170,7 +173,7 @@ def build_sqlite(
         for row in rows:
             pvd = row.get("pvd") or {}
             conn.execute(
-                "INSERT INTO discs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO discs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (
                     row["redump_id"],
                     row["system"],
@@ -181,6 +184,7 @@ def build_sqlite(
                     _nn(row.get("category")),
                     _nn(row.get("media")),
                     _nn(row.get("barcode")),
+                    _nn(row.get("catalog")),
                     _nn(pvd.get("volume_identifier")),
                     _nn(pvd.get("system_identifier")),
                     _nn(pvd.get("creation_date")),
@@ -191,11 +195,12 @@ def build_sqlite(
             )
             for t in row.get("tracks") or []:
                 conn.execute(
-                    "INSERT INTO tracks VALUES (?,?,?,?,?,?,?)",
+                    "INSERT INTO tracks VALUES (?,?,?,?,?,?,?,?)",
                     (
                         row["redump_id"],
                         t["number"],
                         _nn(t.get("type")),
+                        t.get("sectors"),
                         t.get("size_bytes"),
                         _lower_hex(_nn(t.get("crc32"))),
                         _lower_hex(_nn(t.get("md5"))),
