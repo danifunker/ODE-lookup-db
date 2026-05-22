@@ -49,12 +49,23 @@ def main() -> int:
                     help="Restrict to these product slugs")
     ap.add_argument("--dry-run", action="store_true",
                     help="Print the would-be queue and exit; no network")
+    ap.add_argument("--priority", nargs="+", default=None,
+                    help=("Product-slug substring patterns ordered by priority within "
+                          "each media tier (Windows etc. first). "
+                          f"Default: {DL.DEFAULT_PRODUCT_PRIORITY}. "
+                          "Pass 'none' to disable product priority."))
     args = ap.parse_args()
 
     P.ensure_dirs()
 
     languages = None if (args.languages and args.languages[0] == "any") else set(args.languages)
-    queue = DL.iter_queue_from_jsonl(P.WINWORLD_JSONL, languages=languages)
+    if args.priority is not None and args.priority == ["none"]:
+        product_priority = []
+    else:
+        product_priority = args.priority
+    queue = DL.iter_queue_from_jsonl(
+        P.WINWORLD_JSONL, languages=languages, product_priority=product_priority,
+    )
 
     if args.media:
         allow = set(args.media)
@@ -69,8 +80,9 @@ def main() -> int:
     print(f"[download] queue total={len(queue)}  pending={len(pending)}  cap={args.max}")
     if pending:
         # Show first few for sanity
-        for q in pending[:5]:
-            print(f"  [{q.priority}] {q.media_kind:12} {q.language:10} "
+        for q in pending[:10]:
+            print(f"  [m={q.priority} p={q.product_priority}] "
+                  f"{q.media_kind:4} {q.language:10} "
                   f"{q.product_slug}/{q.release_slug}  {q.filename}")
 
     if args.dry_run:

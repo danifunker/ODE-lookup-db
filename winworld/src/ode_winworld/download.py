@@ -59,6 +59,24 @@ MEDIA_PRIORITY = [
 ]
 MEDIA_SKIP = {"Document"}  # docs aren't disc artifacts
 
+# Default product-slug substring priorities. Used as a tiebreaker WITHIN a media
+# tier (e.g. all CDs are pulled before any DVDs, but Windows CDs come before
+# other CDs). Earlier = higher. Substrings, case-insensitive.
+DEFAULT_PRODUCT_PRIORITY = [
+    "windows-95",
+    "windows-98",
+    "windows-me",
+    "windows-nt",
+    "windows-xp",
+    "windows-2000",
+    "windows-longhorn",
+    "windows-",     # any remaining windows-*
+    "ms-dos",
+    "mac-os",
+    "microsoft-office",
+    "microsoft-",   # any other Microsoft product
+]
+
 QUOTA_MARKERS = re.compile(r"(daily limit|quota|exceeded|too many requests)", re.I)
 
 
@@ -75,7 +93,8 @@ class QueueItem:
     file_size_text: str
     archive_hash: Optional[str]
     archive_hash_alg: Optional[str]
-    priority: int               # smaller = sooner
+    priority: int               # media tier; smaller = sooner
+    product_priority: int = 0   # within-tier product preference; smaller = sooner
 
 
 @dataclass
@@ -103,6 +122,16 @@ def _media_priority(kind: str) -> int:
         return len(MEDIA_PRIORITY) + 1  # unknown sinks below all known
 
 
+def _product_priority(slug: str, patterns: list[str]) -> int:
+    """Index of the first pattern matched as a substring (case-insensitive),
+    else len(patterns) so unmatched products sink to the bottom of the tier."""
+    s = slug.lower()
+    for i, p in enumerate(patterns):
+        if p and p.lower() in s:
+            return i
+    return len(patterns)
+
+
 def _iter_inventory_records() -> Iterable[dict]:
     """Prefer assembled winworld.jsonl; fall back to per-release parse.json files
     so the downloader doesn't require an assemble step before running."""
@@ -126,9 +155,17 @@ def _iter_inventory_records() -> Iterable[dict]:
             continue
 
 
-def iter_queue_from_jsonl(jsonl_path: Path, *, languages: set[str] | None = None) -> list[QueueItem]:
+def iter_queue_from_jsonl(
+    jsonl_path: Path,
+    *,
+    languages: set[str] | None = None,
+    product_priority: list[str] | None = None,
+) -> list[QueueItem]:
+    patterns = list(product_priority) if product_priority is not None else list(DEFAULT_PRODUCT_PRIORITY)
     items: list[QueueItem] = []
     for rec in _iter_inventory_records():
+        product_slug = rec.get("product_slug") or ""
+        prod_pri = _product_priority(product_slug, patterns)
         for d in rec.get("downloads", []):
             media = d.get("media_kind") or ""
             if media in MEDIA_SKIP:
@@ -149,8 +186,11 @@ def iter_queue_from_jsonl(jsonl_path: Path, *, languages: set[str] | None = None
                 archive_hash=d.get("archive_hash"),
                 archive_hash_alg=d.get("archive_hash_alg"),
                 priority=_media_priority(media),
+                product_priority=prod_pri,
             ))
-    items.sort(key=lambda it: (it.priority, it.product_slug, it.release_slug, it.filename))
+    items.sort(key=lambda it: (
+        it.priority, it.product_priority, it.product_slug, it.release_slug, it.filename
+    ))
     return items
 
 
