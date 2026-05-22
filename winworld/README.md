@@ -33,10 +33,15 @@ uv run winworld/scripts/extract_and_hash.py
 # Re-run assemble.py + scripts/build_sqlite.py whenever you want a fresh DB.
 ```
 
-The daily download+extract chain is meant to run on a schedule. See
-`launchd/com.danifunker.winworld-pipeline.plist` for a macOS LaunchAgent that
-fires both at 06:00 — copy to `~/Library/LaunchAgents/` and bootstrap with
-`launchctl`.
+The daily download+extract chain is meant to run on a schedule. macOS:
+
+```bash
+./winworld/launchd/install.sh        # install daily-at-06:00 LaunchAgent
+launchctl kickstart gui/$(id -u)/com.danifunker.winworld-pipeline  # run now
+./winworld/launchd/uninstall.sh      # remove
+```
+
+Logs land in `~/Library/Logs/winworld-pipeline.{out,err}.log`.
 
 ## Layout
 

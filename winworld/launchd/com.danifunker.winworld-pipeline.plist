@@ -11,9 +11,7 @@
   - Logs go to ~/Library/Logs/winworld-pipeline.{out,err}.log (rotated by macOS).
 
   Install:
-    cp winworld/launchd/com.danifunker.winworld-pipeline.plist ~/Library/LaunchAgents/
-    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.danifunker.winworld-pipeline.plist
-    launchctl enable gui/$(id -u)/com.danifunker.winworld-pipeline
+    ./winworld/launchd/install.sh
 
   Verify:
     launchctl print gui/$(id -u)/com.danifunker.winworld-pipeline
@@ -22,8 +20,7 @@
     launchctl kickstart gui/$(id -u)/com.danifunker.winworld-pipeline
 
   Uninstall:
-    launchctl bootout gui/$(id -u)/com.danifunker.winworld-pipeline
-    rm ~/Library/LaunchAgents/com.danifunker.winworld-pipeline.plist
+    ./winworld/launchd/uninstall.sh
 
   EDIT THIS FILE before installing if your paths differ:
     - WINWORLD_DATA_DIR (line ~36) — where the data tree lives
