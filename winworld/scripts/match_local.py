@@ -139,7 +139,10 @@ def main() -> int:
     exclude.add(P.DATA.resolve())  # never scan our own archives back into the report
 
     print(f"[match] inventory: {P.WINWORLD_JSONL if P.WINWORLD_JSONL.exists() else P.RELEASE_PAGES}")
-    # Build: name → list[download dicts] (filename can repeat across releases)
+    # Build: name → list[download dicts] (filename can repeat across releases).
+    # Also index the winworld filename with the .7z stripped, because almost
+    # everything users have locally is the extracted disc image (e.g. "Foo.iso"
+    # matches winworld's "Foo.iso.7z"). Treat that as the same identity.
     by_name: dict[str, list[dict]] = defaultdict(list)
     inv_count = 0
     for d in iter_winworld_downloads(P.WINWORLD_JSONL):
@@ -147,6 +150,8 @@ def main() -> int:
         if not fn:
             continue
         by_name[_norm(fn)].append(d)
+        if fn.lower().endswith(".7z"):
+            by_name[_norm(fn[:-3])].append(d)
         inv_count += 1
     print(f"[match] winworld downloads in inventory: {inv_count}")
 

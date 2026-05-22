@@ -36,6 +36,11 @@ SQLITE_PATH = REPO_ROOT / "data" / "ode-lookup.sqlite"
 
 WINWORLD_SCHEMA_VERSION = 1
 
+# This DB exists to power Optical Disc Emulator lookups. WinWorld carries floppies,
+# tapes, VM images, manuals, etc. — they're filtered out at build time. The source
+# JSONL keeps everything so we can revisit this choice without re-scraping.
+WINWORLD_OPTICAL_MEDIA = frozenset({"CD", "DVD"})
+
 
 def read_jsonl(path: Path = JSONL_PATH) -> Iterator[dict[str, Any]]:
     if not path.exists():
@@ -330,7 +335,12 @@ def _insert_redump(conn: sqlite3.Connection, rows: Iterable[dict[str, Any]]) -> 
 
 
 def _insert_winworld(conn: sqlite3.Connection, records: Iterable[dict[str, Any]]) -> int:
-    """Returns the number of releases ingested. Products are deduped."""
+    """Returns the number of releases ingested.
+
+    This is an ODE (Optical Disc Emulator) lookup DB, so only CD/DVD downloads
+    are ingested. Releases with no optical downloads are skipped entirely, and
+    products that thereby get no releases are skipped too.
+    """
     seen_products: set[str] = set()
     count = 0
     for rec in records:
@@ -338,6 +348,13 @@ def _insert_winworld(conn: sqlite3.Connection, records: Iterable[dict[str, Any]]
         release_slug = rec.get("release_slug")
         if not product_slug or not release_slug:
             continue
+
+        optical_downloads = [
+            d for d in (rec.get("downloads") or [])
+            if d.get("download_id") and (d.get("media_kind") in WINWORLD_OPTICAL_MEDIA)
+        ]
+        if not optical_downloads:
+            continue  # nothing useful for this DB
 
         if product_slug not in seen_products:
             seen_products.add(product_slug)
@@ -374,10 +391,8 @@ def _insert_winworld(conn: sqlite3.Connection, records: Iterable[dict[str, Any]]
             ),
         )
 
-        for d in rec.get("downloads") or []:
+        for d in optical_downloads:
             did = d.get("download_id")
-            if not did:
-                continue
             tags = d.get("tags") or []
             conn.execute(
                 """
