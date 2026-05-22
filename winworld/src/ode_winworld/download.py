@@ -56,8 +56,12 @@ MEDIA_PRIORITY = [
     "5¼ Floppy",
     "8 Floppy",
     "Archive",
+    "Document",
+    "Tape",
+    "Virtual PC",
+    "VMware",
 ]
-MEDIA_SKIP = {"Document"}  # docs aren't disc artifacts
+MEDIA_SKIP: set[str] = set()  # nothing skipped — full archive snapshot is the goal
 
 # Default product-slug substring priorities. Used as a tiebreaker WITHIN a media
 # tier (e.g. all CDs are pulled before any DVDs, but Windows CDs come before

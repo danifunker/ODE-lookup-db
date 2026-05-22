@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  WinWorld daily download → extract → hash chain.
+
+  - Fires at 06:00 local time, daily.
+  - StartCalendarInterval missed-fire policy: launchd will fire as soon as the
+    Mac is awake again, so a sleep at 06:00 doesn't lose the run.
+  - The shell wrapper does: download (caps at 25 files) then extract+hash.
+  - Logs go to ~/Library/Logs/winworld-pipeline.{out,err}.log (rotated by macOS).
+
+  Install:
+    cp winworld/launchd/com.danifunker.winworld-pipeline.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.danifunker.winworld-pipeline.plist
+    launchctl enable gui/$(id -u)/com.danifunker.winworld-pipeline
+
+  Verify:
+    launchctl print gui/$(id -u)/com.danifunker.winworld-pipeline
+
+  Run on demand:
+    launchctl kickstart gui/$(id -u)/com.danifunker.winworld-pipeline
+
+  Uninstall:
+    launchctl bootout gui/$(id -u)/com.danifunker.winworld-pipeline
+    rm ~/Library/LaunchAgents/com.danifunker.winworld-pipeline.plist
+
+  EDIT THIS FILE before installing if your paths differ:
+    - WINWORLD_DATA_DIR (line ~36) — where the data tree lives
+    - WorkingDirectory (line ~54)  — repo path
+    - ProgramArguments     (line ~46) — absolute path to `uv` and the repo
+-->
+<dict>
+    <key>Label</key>
+    <string>com.danifunker.winworld-pipeline</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>WINWORLD_DATA_DIR</key>
+        <string>/Volumes/Software/winworld-pc</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>cd "$HOME/repos/ODE-lookup-db" &amp;&amp; /opt/homebrew/bin/uv run winworld/scripts/download.py &amp;&amp; /opt/homebrew/bin/uv run winworld/scripts/extract_and_hash.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/dani/repos/ODE-lookup-db</string>
+
+    <key>StandardOutPath</key>
+    <string>/Users/dani/Library/Logs/winworld-pipeline.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/dani/Library/Logs/winworld-pipeline.err.log</string>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- If the Mac was asleep at 06:00, fire as soon as it wakes. -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- Don't run again if the previous instance is still going. -->
+    <key>AbandonProcessGroup</key>
+    <false/>
+
+    <!-- Single-instance safety: launchd refuses to start a second copy. -->
+    <key>KeepAlive</key>
+    <false/>
+</dict>
+</plist>

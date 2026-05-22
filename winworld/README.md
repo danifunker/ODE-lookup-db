@@ -7,17 +7,36 @@ on cooked-ISO fingerprints (PVD + file-tree hash) plus original artifact hashes.
 ## Status
 
 - [x] Metadata scrape (product + release pages, comments, screenshots)
-- [ ] Archive download
-- [ ] Extraction + ISO/PVD parsing
+- [x] Archive download (daily 25-cap, Windows-first priority)
+- [x] Extraction + ISO/PVD/El-Torito fingerprinting (optical only)
 - [ ] Cross-ref to redump (only feasible for `.cue/.bin` archives)
+- [ ] `.cue/.bin` parser (currently only `.iso/.img` are inspected)
 
 ## Quick start
 
 ```bash
+brew install uv 7-zip                                # 7zz binary required by extract phase
 uv sync --extra dev
-uv run winworld/scripts/scrape_metadata.py          # discover + fetch + parse, resumable
-uv run winworld/scripts/assemble.py                  # fold sidecars -> winworld.jsonl + fulllog.json
+
+export WINWORLD_DATA_DIR=/Volumes/Software/winworld-pc   # where heavy data lives
+
+# Phase 1: metadata (one big resumable scrape, hours at 1 req/sec)
+uv run winworld/scripts/scrape_metadata.py
+uv run winworld/scripts/assemble.py
+
+# Phase 2: daily, 25 downloads (matches WinWorld's per-IP quota)
+uv run winworld/scripts/download.py
+
+# Phase 3: extract each .7z, fingerprint the disc image(s) inside, delete .7z
+uv run winworld/scripts/extract_and_hash.py
+
+# Re-run assemble.py + scripts/build_sqlite.py whenever you want a fresh DB.
 ```
+
+The daily download+extract chain is meant to run on a schedule. See
+`launchd/com.danifunker.winworld-pipeline.plist` for a macOS LaunchAgent that
+fires both at 06:00 — copy to `~/Library/LaunchAgents/` and bootstrap with
+`launchctl`.
 
 ## Layout
 
