@@ -10,6 +10,7 @@ dist/
 build/
 
 # Built artifact — released, not committed
+data/ode-lookup.sqlite
 data/redump.sqlite
 
 # Local resume state — not committed
@@ -20,6 +21,19 @@ data/warnings.json
 
 # Local run logs
 logs/
+
+# winworld/ subtree — canonical data lives on NAS via WINWORLD_DATA_DIR.
+# In-repo data/ holds only the source-of-truth JSONL (LFS) + stats; everything
+# else is derivable or local-scratch.
+winworld/data/raw/
+winworld/data/archives/
+winworld/data/extracted/
+winworld/data/discovery.json
+winworld/data/fulllog.json
+winworld/data/winworld.sqlite
+winworld/data/local_match_report.json
+winworld/data/inventory.tsv
+winworld/data/inventory_by_category/
 
 # Local scratch
 .DS_Store

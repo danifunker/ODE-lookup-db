@@ -1,4 +1,4 @@
-"""Post-build checks for data/redump.sqlite.
+"""Post-build checks for data/ode-lookup.sqlite (redump source).
 
 Verifies meta integrity, FTS row parity, and a canary lookup (sha1 + FTS title)
 against a pinned disc. Exit 0 = ok, 1 = failure.
@@ -33,23 +33,23 @@ def main() -> int:
     conn = sqlite3.connect(SQLITE_PATH)
     try:
         meta = conn.execute(
-            "SELECT schema_version, built_at, source_commit, row_count FROM meta"
+            "SELECT schema_version, built_at, source_commit, row_count FROM meta WHERE source='redump'"
         ).fetchone()
         if meta is None:
-            failures.append("meta row missing")
+            failures.append("meta row for source=redump missing")
         else:
             sv, built_at, _src, row_count = meta
             if sv is None or built_at is None or row_count is None:
                 failures.append(f"meta row has NULLs in required columns: {meta!r}")
-            actual_rows = conn.execute("SELECT COUNT(*) FROM discs").fetchone()[0]
+            actual_rows = conn.execute("SELECT COUNT(*) FROM redump_disc").fetchone()[0]
             if row_count != actual_rows:
                 failures.append(
-                    f"meta.row_count={row_count} but discs has {actual_rows} rows"
+                    f"meta.row_count={row_count} but redump_disc has {actual_rows} rows"
                 )
-            fts_rows = conn.execute("SELECT COUNT(*) FROM discs_fts").fetchone()[0]
+            fts_rows = conn.execute("SELECT COUNT(*) FROM redump_disc_fts").fetchone()[0]
             if fts_rows != actual_rows:
                 failures.append(
-                    f"discs_fts has {fts_rows} rows but discs has {actual_rows}"
+                    f"redump_disc_fts has {fts_rows} rows but redump_disc has {actual_rows}"
                 )
 
         # Canary spot-checks: pull the disc's data from the JSONL source of truth
@@ -70,7 +70,7 @@ def main() -> int:
             )
             if canary_sha1:
                 hit = conn.execute(
-                    "SELECT redump_id FROM tracks WHERE sha1 = ?",
+                    "SELECT redump_id FROM redump_track WHERE sha1 = ?",
                     (canary_sha1.lower(),),
                 ).fetchone()
                 if hit is None or hit[0] != CANARY_REDUMP_ID:
@@ -84,9 +84,9 @@ def main() -> int:
             if first_word:
                 rows = conn.execute(
                     """
-                    SELECT discs_fts.rowid
-                    FROM discs_fts
-                    WHERE discs_fts MATCH ?
+                    SELECT redump_disc_fts.rowid
+                    FROM redump_disc_fts
+                    WHERE redump_disc_fts MATCH ?
                     ORDER BY rank
                     LIMIT 5
                     """,
