@@ -1,18 +1,19 @@
-# Disc schema (v1)
+# Disc schema (v2)
 
 Human documentation of every field in `disc.schema.json`. The JSON Schema is authoritative; this file explains *why* each field exists.
 
 ## Versioning
 
-- `schema_version` is an integer pinned to `1` on every row in v1.
-- v1 is **forward-compatible only**: new optional fields may be added; existing fields will not be renamed or removed. Breaking changes require a major-version bump and a parallel rebuild.
-- Consumers should ignore unknown fields.
+- `schema_version` is an integer pinned to `2` on every row.
+- v2 is additive over v1: it adds `catalog` (top-level) and `tracks[].sectors`, and begins populating `pvd.volume_identifier`. No fields were renamed or removed.
+- Forward-compatible only: new optional fields may be added; existing fields will not be renamed or removed. Breaking changes require a major-version bump and a parallel rebuild.
+- Consumers should ignore unknown fields. Older consumers reading v2 rows degrade gracefully (they warn on the newer version, not error).
 
 ## Top-level fields
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `schema_version` | int | yes | Always `1` in v1. |
+| `schema_version` | int | yes | Always `2`. |
 | `redump_id` | int | yes | Unique key. Same disc on multiple system pages is deduped on this ID. |
 | `system` | enum | yes | One of `pc`, `mac`. Allowlist enforced by validator. |
 | `title` | string | yes | Primary title as shown by redump. |
@@ -24,6 +25,7 @@ Human documentation of every field in `disc.schema.json`. The JSON Schema is aut
 | `version` | string\|null | no | Disc-side version string. |
 | `serials` | string[] | no | Vendor serial numbers printed on the disc. |
 | `barcode` | string\|null | no | Retail barcode. |
+| `catalog` | string\|null | no | Catalog number from the gamecomments Metadata row (`CATALOG …`). All-zero placeholders are stored as `null`. |
 | `category` | string\|null | no | Redump category, e.g. "Games", "Applications". |
 | `pvd` | object\|null | no | Primary Volume Descriptor — ISO 9660 metadata. Useful for identifying mounted images even without hashes. |
 | `tracks` | object[] | yes | At least one track. Each track must have at least one of crc32/md5/sha1. |
@@ -43,3 +45,7 @@ Earlier drafts hashed the raw HTML to detect upstream edits across full refreshe
 ## Track hashes
 
 At least one of `crc32` (8 hex chars), `md5` (32), or `sha1` (40) must be present on each track. All hex is lowercase. Regex-enforced by the validator.
+
+## Track sectors
+
+`tracks[].sectors` is the per-track sector count taken directly from the Sectors column of redump's track table — the canonical duration value, not derived from `size_bytes`. `null` when the cell is empty or malformed. Consumers use it for track-signature fuzzy matching.

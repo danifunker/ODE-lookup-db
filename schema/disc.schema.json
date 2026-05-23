@@ -9,7 +9,7 @@
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 1
+      "const": 2
     },
     "redump_id": {
       "type": "integer",
@@ -50,6 +50,10 @@
       "items": { "type": "string" }
     },
     "barcode": { "type": ["string", "null"] },
+    "catalog": {
+      "type": ["string", "null"],
+      "description": "Catalog number from the gamecomments Metadata row; null for all-zero placeholders."
+    },
     "category": { "type": ["string", "null"] },
     "media": {
       "type": ["string", "null"],
@@ -81,6 +85,7 @@
         "properties": {
           "number": { "type": "integer", "minimum": 1 },
           "type": { "type": "string", "enum": ["data", "audio"] },
+          "sectors": { "type": ["integer", "null"], "minimum": 0 },
           "size_bytes": { "type": ["integer", "null"], "minimum": 0 },
           "crc32": {
             "type": ["string", "null"],

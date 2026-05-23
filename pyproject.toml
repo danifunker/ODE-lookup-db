@@ -10,6 +10,7 @@ dependencies = [
     "jsonschema>=4.21",
     "tenacity>=8.2",
     "orjson>=3.10",
+    "pycdlib>=1.14",         # ISO9660 + Joliet + Rock Ridge + El Torito parsing
 ]
 
 [project.optional-dependencies]

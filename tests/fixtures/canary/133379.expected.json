@@ -27,14 +27,14 @@
     "expiration_date": null,
     "modification_date": "2000-10-20T11:29:46.63+00:00",
     "system_identifier": null,
-    "volume_identifier": null
+    "volume_identifier": "MYST_UK"
   },
   "redump_id": 133379,
   "redump_url": "http://redump.org/disc/133379/",
   "region": [
     "UK"
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "serials": [
     "SKM844AB-CD"
   ],
@@ -45,6 +45,7 @@
       "crc32": "9c5bfbb9",
       "md5": "ba9514dc544f089d0f23cb5756b8097d",
       "number": 1,
+      "sectors": 312161,
       "sha1": "0e8fdf2af55e0bb1ddf0f674eebd9115a10f4793",
       "size_bytes": 734202672,
       "type": "data"

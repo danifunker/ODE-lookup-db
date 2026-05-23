@@ -16,6 +16,7 @@ Structural patterns (as of 2026-05):
 from __future__ import annotations
 
 import datetime as dt
+import html
 import logging
 import re
 from typing import Any
@@ -28,6 +29,11 @@ from .languages import to_iso_code
 log = logging.getLogger(__name__)
 
 DISC_URL_RE = re.compile(r"https?://redump\.org/disc/(\d+)/?")
+# Volume label in the Comments cell: "<b>Volume Label</b>: MYST_UK". The cell
+# may carry several "<b>label</b>: value" lines separated by <br>; first wins.
+VOLUME_LABEL_RE = re.compile(r"<b>\s*Volume Label\s*</b>\s*:\s*([^<]+)", re.IGNORECASE)
+# Metadata cell: "CATALOG 0000000000000". All-zero values are placeholders.
+CATALOG_RE = re.compile(r"^CATALOG\s+(.+)$", re.IGNORECASE)
 # An absent PVD date renders as "0000-00-00" OR as nbsp-padded dashes
 # (e.g. "    -  -  " after entity-decoding and whitespace-stripping).
 ABSENT_DATE_RE = re.compile(r"^(?:0{4}-0{2}-0{2}|[\s\-]*)$")
@@ -58,6 +64,7 @@ def parse_disc_page(html: str, redump_id: int, system: str) -> dict[str, Any]:
 
     gameinfo = _parse_label_table(tree, "table.gameinfo")
     comments = _parse_gamecomments(tree)
+    gc = _extract_gamecomments(comments)
 
     row: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -79,7 +86,8 @@ def parse_disc_page(html: str, redump_id: int, system: str) -> dict[str, Any]:
         "barcode": _normalize_barcode(comments.get("Barcode")),
         "category": _text(gameinfo.get("Category")),
         "media": _text(gameinfo.get("Media")),
-        "pvd": _extract_pvd(tree),
+        "catalog": gc["catalog"],
+        "pvd": _extract_pvd(tree, volume_identifier=gc["volume_identifier"]),
         "disc_structure": _extract_disc_structure(tree, layer_break=layer_break),
         "dumpers": _extract_dumpers(tree),
         "date_added": _text(gameinfo.get("Added")),
@@ -194,6 +202,43 @@ def _parse_gamecomments(tree: HTMLParser) -> dict[str, Node]:
     return out
 
 
+def _extract_gamecomments(comments: dict[str, Node]) -> dict[str, str | None]:
+    """Pull the two consumer-relevant fields out of the gamecomments table.
+
+    `volume_identifier` comes from the free-form Comments cell; `catalog` from
+    the Metadata cell. Both fall back to None when absent.
+    """
+    return {
+        "volume_identifier": _extract_volume_label(comments.get("Comments")),
+        "catalog": _extract_catalog(comments.get("Metadata")),
+    }
+
+
+def _extract_volume_label(cell: Node | None) -> str | None:
+    if cell is None:
+        return None
+    m = VOLUME_LABEL_RE.search(cell.html or "")
+    if m is None:
+        return None
+    value = html.unescape(m.group(1)).strip()
+    return value or None
+
+
+def _extract_catalog(cell: Node | None) -> str | None:
+    if cell is None:
+        return None
+    text = cell.text(strip=True)
+    if not text:
+        return None
+    m = CATALOG_RE.match(text)
+    if m is None:
+        return None
+    value = m.group(1).strip()
+    if not value or set(value) == {"0"}:  # all-zero placeholder → no catalog
+        return None
+    return value
+
+
 def _extract_imgs_titles(cell: Node | None) -> list[str]:
     """For a cell containing <img title="X" /> tags, return the titles in order."""
     if cell is None:
@@ -263,6 +308,7 @@ def _extract_tracks(tree: HTMLParser) -> list[dict[str, Any]]:
             return None
 
     i_num, i_type = col("#"), col("Type")
+    i_sectors = col("Sectors")
     i_size, i_crc = col("Size"), col("CRC-32")
     i_md5, i_sha1 = col("MD5"), col("SHA-1")
     if i_num is None or i_size is None or i_crc is None:
@@ -287,9 +333,15 @@ def _extract_tracks(tree: HTMLParser) -> list[dict[str, Any]]:
             track_type = "data"  # DVD/BD tables have no Type column
 
         size_bytes = _parse_int(tds[i_size].text(strip=True))
+        sectors = (
+            _parse_int(tds[i_sectors].text(strip=True))
+            if i_sectors is not None and i_sectors < len(tds)
+            else None
+        )
         track: dict[str, Any] = {
             "number": int(first),
             "type": track_type,
+            "sectors": sectors,
             "size_bytes": size_bytes,
             "crc32": _hex_or_none(tds[i_crc].text(strip=True), 8),
             "md5": _hex_or_none(tds[i_md5].text(strip=True), 32) if i_md5 is not None else None,
@@ -319,36 +371,35 @@ def _hex_or_none(text: str, length: int) -> str | None:
     return text
 
 
-def _extract_pvd(tree: HTMLParser) -> dict[str, Any] | None:
-    table = tree.css_first("table.pvd")
-    if table is None:
-        return None
+def _extract_pvd(tree: HTMLParser, *, volume_identifier: str | None = None) -> dict[str, Any] | None:
     out: dict[str, Any] = {
-        "volume_identifier": None,
+        "volume_identifier": volume_identifier,
         "system_identifier": None,
         "creation_date": None,
         "modification_date": None,
         "expiration_date": None,
         "effective_date": None,
     }
-    label_to_field = {
-        "Creation": "creation_date",
-        "Modification": "modification_date",
-        "Expiration": "expiration_date",
-        "Effective": "effective_date",
-    }
-    for tr in table.css("tr"):
-        tds = tr.css("td")
-        if len(tds) < 5:
-            continue
-        label = tds[0].text(strip=True)
-        field = label_to_field.get(label)
-        if field is None:
-            continue
-        date_str = tds[2].text(strip=True)
-        time_str = tds[3].text(strip=True)
-        gmt_str = tds[4].text(strip=True)
-        out[field] = _format_pvd_datetime(date_str, time_str, gmt_str)
+    table = tree.css_first("table.pvd")
+    if table is not None:
+        label_to_field = {
+            "Creation": "creation_date",
+            "Modification": "modification_date",
+            "Expiration": "expiration_date",
+            "Effective": "effective_date",
+        }
+        for tr in table.css("tr"):
+            tds = tr.css("td")
+            if len(tds) < 5:
+                continue
+            label = tds[0].text(strip=True)
+            field = label_to_field.get(label)
+            if field is None:
+                continue
+            date_str = tds[2].text(strip=True)
+            time_str = tds[3].text(strip=True)
+            gmt_str = tds[4].text(strip=True)
+            out[field] = _format_pvd_datetime(date_str, time_str, gmt_str)
     if all(v is None for v in out.values()):
         return None
     return out

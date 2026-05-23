@@ -1,8 +1,12 @@
 # ODE-lookup-db
 
-Auto-updated database of optical-disc identification metadata, scraped from [redump.org](http://redump.org) and curated for the USBODE ecosystem.
+Auto-updated lookup database for optical-disc and software-archive identification, curated for the USBODE ecosystem.
 
-**Scope**: PC (IBM PC compatible) and Mac (Apple Macintosh) CD-ROM and DVD entries. Mac/PC hybrid discs are filed by redump under whichever system page is canonical (pc or mac) and are picked up automatically. Consoles, audio CDs, and video discs are out of scope.
+**Sources:**
+- [redump.org](http://redump.org) — PC and Mac CD/DVD metadata (tables `redump_*`)
+- [winworldpc.com](https://winworldpc.com) — abandonware archives (tables `winworld_*`)
+
+**Out of scope:** consoles, audio CDs, video discs. See `MIGRATION-unified-db.md` for the breaking-change migration notes if you previously consumed `redump.sqlite`.
 
 ## For consumers (apps that look up discs)
 
@@ -10,42 +14,72 @@ The latest database is published as a GitHub Release. Fetch it like this:
 
 ```bash
 # Most recent build — stable URL
-curl -L -o redump.sqlite \
-  https://github.com/danifunker/ODE-lookup-db/releases/download/latest/redump.sqlite
+curl -L -o ode-lookup.sqlite \
+  https://github.com/danifunker/ODE-lookup-db/releases/download/latest/ode-lookup.sqlite
 
 # Specific dated build
-curl -L -o redump.sqlite \
-  https://github.com/danifunker/ODE-lookup-db/releases/download/db-2026-05-18/redump.sqlite
+curl -L -o ode-lookup.sqlite \
+  https://github.com/danifunker/ODE-lookup-db/releases/download/db-2026-05-18/ode-lookup.sqlite
 ```
 
 Use `If-Modified-Since` / `ETag` against the asset URL to avoid re-downloading unchanged builds.
 
 ### SQLite schema
 
-| Table | Purpose |
-|---|---|
-| `meta` | `schema_version`, `built_at`, `source_commit`, `row_count` |
-| `discs` | One row per redump disc, full JSON in the `json` column |
-| `tracks` | One row per track. Indexed by `crc32`, `md5`, `sha1` |
-| `serials` | Vendor serials, indexed |
-| `regions` | Region tags |
-| `languages` | ISO 639-1 codes (`zz` = unmapped) |
-
-Query by hash:
+`meta` has one row per source with its own `schema_version`:
 
 ```sql
-SELECT redump_id, title FROM discs
-JOIN tracks USING (redump_id)
-WHERE tracks.sha1 = ?;
+SELECT * FROM meta;
+-- redump  | 2 | 2026-05-22T... | <commit> | 59899
+-- winworld| 1 | 2026-05-22T... | <commit> | 3123
+```
+
+Redump tables (PC / Mac CDs and DVDs):
+
+| Table | Purpose |
+|---|---|
+| `redump_disc` | One row per redump disc |
+| `redump_track` | One row per track. Indexed by `crc32`, `md5`, `sha1` |
+| `redump_serial` | Vendor serials, indexed |
+| `redump_region` | Region tags |
+| `redump_language` | ISO 639-1 codes (`zz` = unmapped) |
+| `redump_artwork` | Reserved; not populated yet |
+| `redump_disc_fts` | FTS5 over title + foreign_title + pvd_volume_id |
+
+WinWorld tables (abandonware archives):
+
+| Table | Purpose |
+|---|---|
+| `winworld_product` | One row per product slug (windows-95, mac-os-x, …) |
+| `winworld_release` | One row per release page; includes notes, install instructions, info JSON |
+| `winworld_download` | One row per `.7z` download. Indexed by `archive_hash`, `media_kind`, `language` |
+| `winworld_serial` | Per-release product keys when listed on the page |
+| `winworld_screenshot` | Per-release screenshot URLs + alt text |
+| `winworld_release_fts` | FTS5 over title + subtitle + description |
+
+Query by track hash (redump):
+
+```sql
+SELECT redump_id, title FROM redump_disc
+JOIN redump_track USING (redump_id)
+WHERE redump_track.sha1 = ?;
 ```
 
 Query by PVD volume label (useful for mounted ISOs):
 
 ```sql
-SELECT redump_id, title FROM discs WHERE pvd_volume_id = ?;
+SELECT redump_id, title FROM redump_disc WHERE pvd_volume_id = ?;
 ```
 
-Always check `meta.schema_version` before parsing. v1 is the current schema; major-version bumps indicate breaking changes.
+Query by WinWorld `.7z` hash (only matches the archive bytes, not the inner ISO):
+
+```sql
+SELECT filename, media_kind, language
+FROM winworld_download
+WHERE archive_hash = ?;
+```
+
+Always check `meta.schema_version` for the source you're querying.
 
 ## For contributors
 
@@ -64,24 +98,92 @@ cd ODE-lookup-db
 uv sync --extra dev
 uv run pytest -q
 
-# Try a tiny scrape
+# Try a tiny scrape (redump)
 uv run scripts/scrape.py --limit 5 --systems pc
 uv run scripts/validate.py
 uv run scripts/build_sqlite.py
-sqlite3 data/redump.sqlite '.schema'
+sqlite3 data/ode-lookup.sqlite '.schema'
 ```
+
+WinWorld pipeline (heavy artifacts go on a NAS via `WINWORLD_DATA_DIR`):
+
+```bash
+export WINWORLD_DATA_DIR=/Volumes/Software/winworld-pc
+uv run winworld/scripts/scrape_metadata.py
+uv run winworld/scripts/assemble.py
+uv run winworld/scripts/build_inventory_index.py
+uv run scripts/build_sqlite.py        # unified build with both sources
+```
+
+### Seeding from scratch
+
+A full re-seed is needed after a parser/schema change, because `scrape.py` skips
+any `redump_id` already present in `data/redump.jsonl`. To re-fetch everything
+through the current parser, start from an empty source file:
+
+```bash
+# 1. Clear the existing data (it's Git LFS-tracked; a content replacement needs
+#    no LFS surgery — the .gitattributes rule re-applies on the next `git add`).
+git rm data/redump.jsonl
+
+# 2. Exhaustive walk of every PC/Mac listing page (not the added-desc checkpoint).
+uv run scripts/scrape.py --full-discovery
+
+# 3. Validate and build.
+uv run scripts/validate.py
+uv run scripts/build_sqlite.py
+```
+
+#### Manually setting the discovery checkpoint
+
+The daily cron uses the **added-desc** discovery path, which walks redump's
+newest-first listing and stops once it reaches `topmost_redump_id` in
+`data/discovery_checkpoint.json`. A `--full-discovery` seed does **not** update
+this file, so after a from-scratch seed you must set it by hand to the highest
+`redump_id` you captured — otherwise the next cron run re-walks discs you already
+have.
+
+Set it to the max ID in the freshly seeded JSONL:
+
+```bash
+uv run python -c "
+import json, pathlib
+ids = [json.loads(l)['redump_id'] for l in pathlib.Path('data/redump.jsonl').read_text().splitlines() if l.strip()]
+top = max(ids)
+pathlib.Path('data/discovery_checkpoint.json').write_text(json.dumps({'topmost_redump_id': top}, indent=2) + chr(10))
+print('checkpoint set to', top)
+"
+```
+
+The file format is:
+
+```json
+{
+  "topmost_redump_id": 133529,
+  "updated_at": "2026-05-19T17:05:04.627539+00:00"
+}
+```
+
+Only `topmost_redump_id` is required; `updated_at` is informational and is
+refreshed automatically on the next successful cron run. Commit the checkpoint
+alongside the seeded `redump.jsonl`.
 
 ### Repo layout
 
 ```
-data/redump.jsonl      source of truth (one disc per line, plain JSONL)
-data/stats.json        row counts + all known IDs
-data/redump.sqlite     built artifact (not committed; released)
-schema/                JSON Schema + human field docs
+data/redump.jsonl      redump source of truth (one disc per line, JSONL)
+data/stats.json        redump row counts + all known IDs
+data/ode-lookup.sqlite unified built artifact (gitignored; released)
+schema/                JSON Schema + human field docs (redump)
 src/ode_lookup_db/     parser, validator, db, scraper, http client
 scripts/               CLI entry points: scrape, recheck, validate, build_sqlite, canary, stats
 tests/                 pytest; fixtures hold cached HTML
 .github/workflows/     daily.yml (cron), validate-pr.yml
+
+winworld/              winworldpc.com subtree (see winworld/README.md)
+  src/ode_winworld/    fetch, parse, download modules
+  scripts/             scrape_metadata, assemble, download, match_local, ...
+  data/winworld.jsonl  winworld source of truth (committed when assembled locally)
 ```
 
 ### Daily pipeline
@@ -95,7 +197,7 @@ Triggered by cron at 06:17 UTC and via `workflow_dispatch`:
 5. Run canary (re-parse pinned discs, assert exact expected output)
 6. Append/update `data/redump.jsonl`, refresh `stats.json`
 7. Commit; tag previous HEAD as `db-good-YYYY-MM-DD` for rollback
-8. Build `redump.sqlite` and publish as a GitHub Release
+8. Build `ode-lookup.sqlite` and publish as a GitHub Release
 
 Failures file a GitHub issue and abort the commit. Warnings file an issue but proceed.
 

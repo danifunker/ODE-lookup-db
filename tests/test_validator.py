@@ -9,7 +9,7 @@ from ode_lookup_db.validator import MAX_NEW_ROWS_PER_RUN, validate_rows
 
 def _row(rid: int, **overrides) -> dict:
     base = {
-        "schema_version": 1,
+        "schema_version": 2,
         "redump_id": rid,
         "system": "pc",
         "title": f"Test Disc {rid}",

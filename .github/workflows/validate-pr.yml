@@ -28,4 +28,4 @@ jobs:
       - name: Validate JSONL
         run: uv run scripts/validate.py
       - name: Build SQLite (smoke)
-        run: uv run scripts/build_sqlite.py --out /tmp/redump.sqlite
+        run: uv run scripts/build_sqlite.py --out /tmp/ode-lookup.sqlite
