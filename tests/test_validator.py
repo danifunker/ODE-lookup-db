@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from ode_lookup_db.validator import MAX_NEW_ROWS_PER_RUN, validate_rows
 
