@@ -91,7 +91,7 @@ def main() -> int:
             print(f"    ok  images={n_imgs}  {sizes/1e6:.1f}MB  {deleted}")
         elif status == "no_disc_image":
             skipped += 1
-            print(f"    skipped: no disc image in archive")
+            print("    skipped: no disc image in archive")
         elif status == "source_unavailable":
             skipped += 1
             print(f"    skipped: source not accessible "

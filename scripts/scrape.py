@@ -27,7 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ode_lookup_db.db import JSONL_PATH, read_jsonl, write_jsonl  # noqa: E402
+from ode_lookup_db.db import read_jsonl, write_jsonl  # noqa: E402
 from ode_lookup_db.http_client import RedumpClient  # noqa: E402
 from ode_lookup_db.parser import ParseError, parse_disc_page  # noqa: E402
 from ode_lookup_db.scraper import (  # noqa: E402

@@ -15,10 +15,8 @@ so we don't waste IP reputation hammering a blocked endpoint.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 import time
-from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -113,7 +111,7 @@ def main() -> int:
                 print(f"    ok  {_humanize_bytes(res.bytes_written)}  "
                       f"{res.elapsed_ms / 1000:.1f}s  via {res.mirror_id or '?'}")
             elif status == "skipped":
-                print(f"    skipped")
+                print("    skipped")
             elif status == "hash_mismatch":
                 done_err += 1
                 print(f"    ! hash_mismatch  expected={res.expected_hash[:16]}...  "

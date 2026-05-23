@@ -5,7 +5,6 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-import pytest
 
 from ode_lookup_db.db import build_sqlite, read_jsonl, write_jsonl
 

@@ -18,7 +18,6 @@ disc is "good." Callers (derived.py) make that call from `errors` length.
 """
 from __future__ import annotations
 
-import base64
 import hashlib
 import io
 from dataclasses import dataclass, field
