@@ -58,12 +58,6 @@ jobs:
       - name: Refresh stats
         run: uv run scripts/stats.py
 
-      - name: Tag previous HEAD for rollback
-        run: |
-          DATE=$(date -u +%Y-%m-%d)
-          git tag -f "db-good-$DATE" HEAD
-          git push --force origin "db-good-$DATE" || true
-
       - name: Commit JSONL + stats
         run: |
           git config user.name  "github-actions[bot]"
