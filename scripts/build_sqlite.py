@@ -18,9 +18,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from ode_lookup_db.db import (                                          # noqa: E402
     JSONL_PATH,
     SQLITE_PATH,
+    WINWORLD_ARCHIVES_DIR,
     WINWORLD_JSONL_PATH,
     build_sqlite,
     read_jsonl,
+    read_winworld_disc_images,
     read_winworld_jsonl,
 )
 
@@ -45,7 +47,20 @@ def main() -> int:
     if ww is None and not args.no_winworld:
         logging.info("skipping winworld (no jsonl at %s)", WINWORLD_JSONL_PATH)
 
-    total = build_sqlite(rows, winworld_records=ww, path=args.out, source_commit=commit)
+    disc_images = None
+    if ww is not None and WINWORLD_ARCHIVES_DIR.is_dir():
+        disc_images = read_winworld_disc_images()
+    elif ww is not None:
+        logging.info("no winworld archives dir at %s; disc_image table will be empty",
+                     WINWORLD_ARCHIVES_DIR)
+
+    total = build_sqlite(
+        rows,
+        winworld_records=ww,
+        winworld_disc_images=disc_images,
+        path=args.out,
+        source_commit=commit,
+    )
     logging.info("built %s with %d total rows", args.out, total)
     return 0
 

@@ -14,6 +14,7 @@ source with its independent schema_version.
 
 from __future__ import annotations
 
+import logging
 import sqlite3
 from datetime import datetime, UTC
 from pathlib import Path
@@ -34,7 +35,7 @@ WINWORLD_DATA_DIR = Path(os.environ["WINWORLD_DATA_DIR"]).resolve() if os.enviro
 WINWORLD_JSONL_PATH = WINWORLD_DATA_DIR / "winworld.jsonl"
 SQLITE_PATH = REPO_ROOT / "data" / "ode-lookup.sqlite"
 
-WINWORLD_SCHEMA_VERSION = 1
+WINWORLD_SCHEMA_VERSION = 2
 
 # This DB exists to power Optical Disc Emulator lookups. WinWorld carries floppies,
 # tapes, VM images, manuals, etc. — they're filtered out at build time. The source
@@ -250,6 +251,46 @@ CREATE VIRTUAL TABLE winworld_release_fts USING fts5(
     title, subtitle, description_text,
     tokenize='unicode61 remove_diacritics 2'
 );
+
+-- Per-disc inspection rows, sourced from `.derived.json` sidecars on the
+-- archives volume. Populated only for downloads that have been fetched +
+-- extracted locally. image_sha256 is NULLable: future iterations may record
+-- partial rows where extraction succeeded but hashing didn't.
+CREATE TABLE winworld_disc_image (
+    product_slug             TEXT NOT NULL,
+    release_slug             TEXT NOT NULL,
+    archive_filename         TEXT NOT NULL,    -- the .7z basename (matches winworld_download.filename)
+    iso_filename             TEXT,             -- basename of the .iso inside the archive
+    image_path               TEXT NOT NULL,    -- archive-relative .iso path; PK component
+    image_sha256             TEXT,             -- nullable; high-confidence content match when present
+    size_bytes               INTEGER,
+    filetree_sha256          TEXT,
+    file_count               INTEGER,
+    dir_count                INTEGER,
+    volume_identifier        TEXT,
+    system_identifier        TEXT,
+    publisher_identifier     TEXT,
+    preparer_identifier      TEXT,
+    application_identifier   TEXT,
+    volume_creation_date     TEXT,
+    volume_modification_date TEXT,
+    logical_block_size       INTEGER,
+    has_joliet               INTEGER,
+    has_rock_ridge           INTEGER,
+    has_udf                  INTEGER,
+    has_eltorito             INTEGER,
+    el_torito_platform       TEXT,
+    el_torito_image_sha256   TEXT,
+    el_torito_image_size     INTEGER,
+    inspect_errors_json      TEXT,             -- non-null when inspection had errors
+    inspected_at             TEXT,
+    PRIMARY KEY (product_slug, release_slug, archive_filename, image_path)
+);
+CREATE INDEX idx_wwdi_image_sha256       ON winworld_disc_image(image_sha256)       WHERE image_sha256 IS NOT NULL;
+CREATE INDEX idx_wwdi_filetree_sha256    ON winworld_disc_image(filetree_sha256)    WHERE filetree_sha256 IS NOT NULL;
+CREATE INDEX idx_wwdi_volume_identifier  ON winworld_disc_image(volume_identifier)  WHERE volume_identifier IS NOT NULL;
+CREATE INDEX idx_wwdi_iso_filename       ON winworld_disc_image(iso_filename COLLATE NOCASE) WHERE iso_filename IS NOT NULL;
+CREATE INDEX idx_wwdi_archive_filename   ON winworld_disc_image(archive_filename COLLATE NOCASE);
 """
 
 
@@ -476,6 +517,7 @@ def build_sqlite(
     path: Path = SQLITE_PATH,
     source_commit: str | None = None,
     winworld_records: Iterable[dict[str, Any]] | None = None,
+    winworld_disc_images: Iterable[dict[str, Any]] | None = None,
 ) -> int:
     """Rebuild the unified SQLite from per-source records.
 
@@ -511,8 +553,11 @@ def build_sqlite(
             )
 
         winworld_count = 0
+        disc_image_count = 0
         if winworld_records is not None:
             winworld_count = _insert_winworld(conn, winworld_records)
+            if winworld_disc_images is not None:
+                disc_image_count = _insert_winworld_disc_images(conn, winworld_disc_images)
             _write_meta_row(
                 conn,
                 source="winworld",
@@ -520,6 +565,8 @@ def build_sqlite(
                 source_commit=source_commit,
                 row_count=winworld_count,
             )
+            if disc_image_count:
+                logging.info("winworld_disc_image: %d rows", disc_image_count)
 
         conn.execute("ANALYZE")
         conn.commit()
@@ -538,3 +585,117 @@ def read_winworld_jsonl(path: Path = WINWORLD_JSONL_PATH) -> Iterator[dict[str, 
             line = line.strip()
             if line:
                 yield orjson.loads(line)
+
+
+WINWORLD_ARCHIVES_DIR = WINWORLD_DATA_DIR / "archives"
+# Consolidated, committed JSONL — one line per disc_image row. Generated from
+# the NAS sidecars via `winworld/scripts/build_disc_images_jsonl.py` and
+# committed so the GH runner can build the DB without NAS access.
+WINWORLD_DISC_IMAGES_JSONL = REPO_ROOT / "winworld" / "data" / "disc_images.jsonl"
+
+
+def read_winworld_disc_images(
+    archives_dir: Path = WINWORLD_ARCHIVES_DIR,
+    jsonl_path: Path = WINWORLD_DISC_IMAGES_JSONL,
+) -> Iterator[dict[str, Any]]:
+    """Yield one row per inspected disc image, schema matching
+    `winworld_disc_image` table columns.
+
+    Prefers the committed `disc_images.jsonl` when present (this is what the
+    GH runner reads). Falls back to walking the NAS sidecars at
+    `WINWORLD_DATA_DIR/archives/<product>/<release>/<file>.7z.derived.json`
+    so locally-mounted archives still work.
+    """
+    if jsonl_path.exists():
+        with jsonl_path.open("rb") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    yield orjson.loads(line)
+        return
+    if not archives_dir.is_dir():
+        return
+    for sidecar in archives_dir.glob("*/*/*.derived.json"):
+        try:
+            doc = orjson.loads(sidecar.read_bytes())
+        except (OSError, ValueError):
+            continue
+        rel = sidecar.relative_to(archives_dir)
+        parts = rel.parts  # (product_slug, release_slug, "<archive>.7z.derived.json")
+        if len(parts) != 3 or not parts[2].endswith(".7z.derived.json"):
+            continue
+        product_slug = parts[0]
+        release_slug = parts[1]
+        archive_filename = parts[2][: -len(".derived.json")]  # strip → "<name>.7z"
+
+        inspected_at = doc.get("completed_at")
+        for img in doc.get("disc_images") or []:
+            abs_path = img.get("path") or ""
+            # Extract path relative to the archive's extracted root, e.g.
+            #   .../extracted/<product>/<release>/<archive_filename>/<...>/<iso>
+            # We want the part after `<archive_filename>/`.
+            image_path = abs_path
+            marker = f"/{archive_filename}/"
+            idx = abs_path.find(marker)
+            if idx >= 0:
+                image_path = abs_path[idx + len(marker):]
+            iso_filename = image_path.rsplit("/", 1)[-1] if image_path else None
+
+            errs = img.get("errors") or []
+            yield {
+                "product_slug":             product_slug,
+                "release_slug":             release_slug,
+                "archive_filename":         archive_filename,
+                "iso_filename":             iso_filename,
+                "image_path":               image_path,
+                "image_sha256":             _lower_hex(_nn(img.get("image_sha256"))),
+                "size_bytes":               img.get("size_bytes"),
+                "filetree_sha256":          _lower_hex(_nn(img.get("filetree_sha256"))),
+                "file_count":               img.get("file_count"),
+                "dir_count":                img.get("dir_count"),
+                "volume_identifier":        _nn(img.get("volume_identifier")),
+                "system_identifier":        _nn(img.get("system_identifier")),
+                "publisher_identifier":     _nn(img.get("publisher_identifier")),
+                "preparer_identifier":      _nn(img.get("preparer_identifier")),
+                "application_identifier":   _nn(img.get("application_identifier")),
+                "volume_creation_date":     _nn(img.get("volume_creation_date")),
+                "volume_modification_date": _nn(img.get("volume_modification_date")),
+                "logical_block_size":       img.get("logical_block_size"),
+                "has_joliet":               int(bool(img.get("has_joliet")))     if img.get("has_joliet")     is not None else None,
+                "has_rock_ridge":           int(bool(img.get("has_rock_ridge"))) if img.get("has_rock_ridge") is not None else None,
+                "has_udf":                  int(bool(img.get("has_udf")))        if img.get("has_udf")        is not None else None,
+                "has_eltorito":             int(bool(img.get("has_eltorito")))   if img.get("has_eltorito")   is not None else None,
+                "el_torito_platform":       _nn(img.get("el_torito_platform")),
+                "el_torito_image_sha256":   _lower_hex(_nn(img.get("el_torito_image_sha256"))),
+                "el_torito_image_size":     img.get("el_torito_image_size"),
+                "inspect_errors_json":      orjson.dumps(errs).decode() if errs else None,
+                "inspected_at":             inspected_at,
+            }
+
+
+_WINWORLD_DISC_IMAGE_COLS = (
+    "product_slug", "release_slug", "archive_filename", "iso_filename", "image_path",
+    "image_sha256", "size_bytes", "filetree_sha256", "file_count", "dir_count",
+    "volume_identifier", "system_identifier", "publisher_identifier", "preparer_identifier",
+    "application_identifier", "volume_creation_date", "volume_modification_date",
+    "logical_block_size", "has_joliet", "has_rock_ridge", "has_udf", "has_eltorito",
+    "el_torito_platform", "el_torito_image_sha256", "el_torito_image_size",
+    "inspect_errors_json", "inspected_at",
+)
+
+
+def _insert_winworld_disc_images(
+    conn: sqlite3.Connection, images: Iterable[dict[str, Any]]
+) -> int:
+    sql = (
+        "INSERT OR REPLACE INTO winworld_disc_image ("
+        + ",".join(_WINWORLD_DISC_IMAGE_COLS)
+        + ") VALUES ("
+        + ",".join("?" * len(_WINWORLD_DISC_IMAGE_COLS))
+        + ")"
+    )
+    count = 0
+    for row in images:
+        conn.execute(sql, tuple(row.get(c) for c in _WINWORLD_DISC_IMAGE_COLS))
+        count += 1
+    return count
