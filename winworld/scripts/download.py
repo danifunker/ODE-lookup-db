@@ -79,7 +79,7 @@ def main() -> int:
     if pending:
         # Show first few for sanity
         for q in pending[:10]:
-            print(f"  [m={q.priority} p={q.product_priority}] "
+            print(f"  [m={q.priority} v={q.vendor_priority} p={q.product_priority}] "
                   f"{q.media_kind:4} {q.language:10} "
                   f"{q.product_slug}/{q.release_slug}  {q.filename}")
 

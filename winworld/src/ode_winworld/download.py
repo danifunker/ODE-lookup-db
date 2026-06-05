@@ -63,6 +63,13 @@ MEDIA_PRIORITY = [
 ]
 MEDIA_SKIP: set[str] = set()  # nothing skipped — full archive snapshot is the goal
 
+# Product-slug substrings to skip entirely. Case-insensitive.
+# Longhorn pre-reset / post-reset are beta builds — no real CD art exists for
+# them, so ODE consumers would never have a use for the images.
+DEFAULT_PRODUCT_SKIP: list[str] = [
+    "windows-longhorn",
+]
+
 # Default product-slug substring priorities. Used as a tiebreaker WITHIN a media
 # tier (e.g. all CDs are pulled before any DVDs, but Windows CDs come before
 # other CDs). Earlier = higher. Substrings, case-insensitive.
@@ -79,6 +86,21 @@ DEFAULT_PRODUCT_PRIORITY = [
     "mac-os",
     "microsoft-office",
     "microsoft-",   # any other Microsoft product
+]
+
+# Vendor-tier priority. Applied BEFORE product priority within a media tier, so
+# whole vendors clear out together (smallest groups first → quick wins).
+# Matches `info.Vendor` as a case-insensitive substring; the first hit wins so
+# variants like "Digital Equipment Corporation" / "DEC" / "Digital" all fall in
+# the same tier if any of them is listed.
+# Each inner list = one tier (equal priority within). Earlier list = higher.
+DEFAULT_VENDOR_TIERS: list[list[str]] = [
+    ["claris", "sybase", "next"],
+    ["digital equipment", "dec", "softkey", "netscape", "watcom", "sco"],
+    ["mozilla", "sgi", "micrografx", "oracle", "connectix"],
+    ["broderbund"],
+    ["sun microsystems"],
+    ["apple"],
 ]
 
 QUOTA_MARKERS = re.compile(r"(daily limit|quota|exceeded|too many requests)", re.I)
@@ -98,7 +120,8 @@ class QueueItem:
     archive_hash: Optional[str]
     archive_hash_alg: Optional[str]
     priority: int               # media tier; smaller = sooner
-    product_priority: int = 0   # within-tier product preference; smaller = sooner
+    vendor_priority: int = 0    # within-media-tier vendor preference; smaller = sooner
+    product_priority: int = 0   # within-vendor-tier product preference; smaller = sooner
 
 
 @dataclass
@@ -136,6 +159,19 @@ def _product_priority(slug: str, patterns: list[str]) -> int:
     return len(patterns)
 
 
+def _vendor_priority(vendor: str, tiers: list[list[str]]) -> int:
+    """Index of the first tier whose any pattern is a case-insensitive substring
+    of `vendor`. Unmatched vendors sink to len(tiers)."""
+    v = (vendor or "").lower()
+    if not v:
+        return len(tiers)
+    for i, tier in enumerate(tiers):
+        for pat in tier:
+            if pat and pat.lower() in v:
+                return i
+    return len(tiers)
+
+
 def _iter_inventory_records() -> Iterable[dict]:
     """Prefer assembled winworld.jsonl; fall back to per-release parse.json files
     so the downloader doesn't require an assemble step before running."""
@@ -164,12 +200,20 @@ def iter_queue_from_jsonl(
     *,
     languages: set[str] | None = None,
     product_priority: list[str] | None = None,
+    vendor_tiers: list[list[str]] | None = None,
 ) -> list[QueueItem]:
     patterns = list(product_priority) if product_priority is not None else list(DEFAULT_PRODUCT_PRIORITY)
+    vtiers = list(vendor_tiers) if vendor_tiers is not None else list(DEFAULT_VENDOR_TIERS)
+    skip_patterns = [p.lower() for p in DEFAULT_PRODUCT_SKIP if p]
     items: list[QueueItem] = []
     for rec in _iter_inventory_records():
         product_slug = rec.get("product_slug") or ""
+        slug_lower = product_slug.lower()
+        if any(p in slug_lower for p in skip_patterns):
+            continue
         prod_pri = _product_priority(product_slug, patterns)
+        vendor = ((rec.get("info") or {}).get("Vendor")) or ""
+        vend_pri = _vendor_priority(vendor, vtiers)
         for d in rec.get("downloads", []):
             media = d.get("media_kind") or ""
             if media in MEDIA_SKIP:
@@ -190,10 +234,12 @@ def iter_queue_from_jsonl(
                 archive_hash=d.get("archive_hash"),
                 archive_hash_alg=d.get("archive_hash_alg"),
                 priority=_media_priority(media),
+                vendor_priority=vend_pri,
                 product_priority=prod_pri,
             ))
     items.sort(key=lambda it: (
-        it.priority, it.product_priority, it.product_slug, it.release_slug, it.filename
+        it.priority, it.vendor_priority, it.product_priority,
+        it.product_slug, it.release_slug, it.filename,
     ))
     return items
 
