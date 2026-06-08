@@ -194,12 +194,54 @@ Triggered by cron at 06:17 UTC and via `workflow_dispatch`:
 2. Discover new disc IDs across PC and Mac system pages
 3. Fetch each new disc (≤ 1 req/sec, polite User-Agent)
 4. Parse → validate against `schema/disc.schema.json`
-5. Run canary (re-parse pinned discs, assert exact expected output)
+5. Run canary (re-parse pinned discs from the live site — see below)
 6. Append/update `data/redump.jsonl`, refresh `stats.json`
 7. Commit; tag previous HEAD as `db-good-YYYY-MM-DD` for rollback
 8. Build `ode-lookup.sqlite` and publish as a GitHub Release
 
 Failures file a GitHub issue and abort the commit. Warnings file an issue but proceed.
+
+### Canary fixtures
+
+`scripts/canary.py` guards against redump changing their HTML in a way that
+breaks the parser. It fetches the live page for each pinned disc (see
+`tests/fixtures/canary/*.html`) and compares the parse to the stored
+`*.expected.json`.
+
+A live page can differ from its fixture for two reasons, and the canary treats
+them differently:
+
+- **The parser broke** — the live page no longer parses, or no longer passes
+  schema validation. This is a real regression: the canary **hard-fails**
+  (exit 1) and the daily run aborts.
+- **A redump editor edited the disc** — new ring code, extra dumper, a volume
+  label that wasn't there before, a re-dump, etc. The parser is fine; our frozen
+  fixture is just stale. The canary logs a **soft warning** ("drift"), notes it
+  in the Actions step summary, and **lets the run proceed** (exit 0).
+
+So an upstream metadata edit no longer kills the daily scrape. When you see a
+drift warning, refresh the fixture at your convenience:
+
+```bash
+# Refresh just the disc(s) that drifted (the warning prints the exact command):
+uv run scripts/canary.py --update --ids 16345
+
+# Or refresh every canary fixture:
+uv run scripts/canary.py --update
+```
+
+`--update` re-fetches the live page and rewrites **both** `<id>.html` and
+`<id>.expected.json` together — they must stay in sync because
+`tests/test_parser.py` parses the frozen HTML offline and compares it to the
+expected JSON. After updating, run `uv run pytest tests/test_parser.py` and fix
+any hand-written assertions that pinned the old data (e.g. a disc that gained a
+volume label moves from `test_volume_label_absent` to `test_volume_label_positive`).
+
+Other flags:
+
+- `--strict` — treat *any* difference as a failure (exit 1). Useful for a manual
+  end-to-end check that nothing at all has changed.
+- `--ids 16345,99835` — limit any mode to specific discs.
 
 ## Schema
 

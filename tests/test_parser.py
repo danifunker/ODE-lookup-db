@@ -79,14 +79,14 @@ def _parse(redump_id: int, system: str) -> dict:
 
 @pytest.mark.parametrize(
     "redump_id,system,expected",
-    [(133379, "pc", "MYST_UK"), (92225, "pc", "007LEGENDS")],
+    [(133379, "pc", "MYST_UK"), (92225, "pc", "007LEGENDS"), (16345, "pc", "ALICE00A")],
 )
 def test_volume_label_positive(redump_id: int, system: str, expected: str):
     row = _parse(redump_id, system)
     assert row["pvd"]["volume_identifier"] == expected
 
 
-@pytest.mark.parametrize("redump_id,system", [(99835, "mac"), (16345, "pc"), (27832, "pc")])
+@pytest.mark.parametrize("redump_id,system", [(99835, "mac"), (27832, "pc")])
 def test_volume_label_absent(redump_id: int, system: str):
     row = _parse(redump_id, system)
     assert (row.get("pvd") or {}).get("volume_identifier") is None

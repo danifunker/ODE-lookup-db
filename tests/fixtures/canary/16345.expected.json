@@ -2,11 +2,11 @@
   "barcode": "0 14633 14145 0",
   "category": "Games",
   "date_added": "2010-10-19 13:49",
-  "date_last_modified": "2021-12-01 11:57",
+  "date_last_modified": "2026-06-08 01:54",
   "disc_structure": {
     "ifpi": "IFPI LB41",
     "layer_break": null,
-    "mould_sid": "IFPI 1030, IFPI 1020",
+    "mould_sid": "IFPI 1030, IFPI 1020, IFPI 1071",
     "ring_mastering_codes": [
       "1414507 + + A4279-01",
       "A4681-02 1414507"
@@ -16,7 +16,8 @@
     "joel4565",
     "Nexy",
     "nightson",
-    "Digitoxin"
+    "Digitoxin",
+    "donutbruit"
   ],
   "edition": "Original",
   "languages": [
@@ -40,7 +41,7 @@
     "expiration_date": null,
     "modification_date": "2000-11-16T17:31:17.00+00:00",
     "system_identifier": null,
-    "volume_identifier": null
+    "volume_identifier": "ALICE00A"
   },
   "redump_id": 16345,
   "redump_url": "http://redump.org/disc/16345/",
