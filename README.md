@@ -115,6 +115,54 @@ uv run winworld/scripts/build_inventory_index.py
 uv run scripts/build_sqlite.py        # unified build with both sources
 ```
 
+`assemble.py` regenerates `winworld/data/winworld.jsonl` + `stats.json` from the
+raw tree (on the NAS). When that tree lives on the NAS, copy the two committed
+artifacts back into the repo and commit them:
+
+```bash
+cp "$WINWORLD_DATA_DIR/winworld.jsonl" winworld/data/winworld.jsonl
+cp "$WINWORLD_DATA_DIR/stats.json"     winworld/data/stats.json
+git add winworld/data/winworld.jsonl winworld/data/stats.json
+git commit -m "winworld: refresh metadata scrape $(date -u +%Y-%m-%d)"
+```
+
+#### Updating `disc_images.jsonl`
+
+`winworld/data/disc_images.jsonl` is the consolidated per-disc inspection data
+(one line per inspected `.iso`: hashes, sizes, volume labels) that
+`build_sqlite.py` folds into the `winworld_disc_image` table. **The daily
+pipeline does not regenerate it** — it only *reads* whatever is committed (the
+runner has no NAS access and the source archives are 200 MB+). So this is a
+manual, run-it-occasionally local step, then `git add` + commit the result.
+
+It is built in three stages, all reading/writing the NAS archive tree except the
+final consolidation, which writes straight into the repo:
+
+```bash
+export WINWORLD_DATA_DIR=/Volumes/Software/winworld-pc
+
+# 1. Download new optical archives (.7z) — polite trickle, 25 files per run.
+uv run winworld/scripts/download.py
+
+# 2. Extract each new CD/DVD .7z, inspect+hash every .iso inside, write a
+#    .derived.json sidecar next to the archive on the NAS. Idempotent: only
+#    archives without a final .derived.json are processed.
+uv run winworld/scripts/extract_and_hash.py
+
+# 3. Fold every .derived.json on the NAS into the committed JSONL. This writes
+#    directly to winworld/data/disc_images.jsonl in the repo (NOT the NAS), so
+#    there is no copy-back step.
+uv run winworld/scripts/build_disc_images_jsonl.py
+
+git add winworld/data/disc_images.jsonl
+git commit -m "winworld: refresh disc inspection data $(date -u +%Y-%m-%d)"
+```
+
+So no, nothing rebuilds it for you: run the three scripts when you've downloaded
+more discs, then add and commit `disc_images.jsonl`. Steps 1–2 are resumable and
+safe to re-run; step 3 is a pure fold and can be repeated any time (rerunning it
+without new `.derived.json` sidecars just reproduces the same file).
+
 ### Seeding from scratch
 
 A full re-seed is needed after a parser/schema change, because `scrape.py` skips
