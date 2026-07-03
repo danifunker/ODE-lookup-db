@@ -268,6 +268,7 @@ CREATE TABLE winworld_disc_image (
     file_count               INTEGER,
     dir_count                INTEGER,
     volume_identifier        TEXT,
+    partition_table          TEXT,             -- 'APM'/'bare-HFS' for classic-Mac discs rb-cli identified (pycdlib can't)
     system_identifier        TEXT,
     publisher_identifier     TEXT,
     preparer_identifier      TEXT,
@@ -654,6 +655,7 @@ def read_winworld_disc_images(
                 "file_count":               img.get("file_count"),
                 "dir_count":                img.get("dir_count"),
                 "volume_identifier":        _nn(img.get("volume_identifier")),
+                "partition_table":          _nn(img.get("partition_table")),
                 "system_identifier":        _nn(img.get("system_identifier")),
                 "publisher_identifier":     _nn(img.get("publisher_identifier")),
                 "preparer_identifier":      _nn(img.get("preparer_identifier")),
@@ -676,7 +678,7 @@ def read_winworld_disc_images(
 _WINWORLD_DISC_IMAGE_COLS = (
     "product_slug", "release_slug", "archive_filename", "iso_filename", "image_path",
     "image_sha256", "size_bytes", "filetree_sha256", "file_count", "dir_count",
-    "volume_identifier", "system_identifier", "publisher_identifier", "preparer_identifier",
+    "volume_identifier", "partition_table", "system_identifier", "publisher_identifier", "preparer_identifier",
     "application_identifier", "volume_creation_date", "volume_modification_date",
     "logical_block_size", "has_joliet", "has_rock_ridge", "has_udf", "has_eltorito",
     "el_torito_platform", "el_torito_image_sha256", "el_torito_image_size",

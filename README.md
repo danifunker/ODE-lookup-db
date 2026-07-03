@@ -147,6 +147,11 @@ uv run winworld/scripts/download.py
 # 2. Extract each new CD/DVD .7z, inspect+hash every .iso inside, write a
 #    .derived.json sidecar next to the archive on the NAS. Idempotent: only
 #    archives without a final .derived.json are processed.
+#    Classic-Mac discs are HFS/APM (no ISO9660 filesystem), so pycdlib can't
+#    walk them; if `rb-cli` is on PATH it's used as a fallback to record the
+#    partition table + volume name (status `hfs_identified`, no filetree — the
+#    image_sha256 stays the primary fingerprint). Optional dep; without it those
+#    discs stay `inspect_failed` but still contribute image_sha256 + size.
 uv run winworld/scripts/extract_and_hash.py
 
 # 3. Fold every .derived.json on the NAS into the committed JSONL. This writes

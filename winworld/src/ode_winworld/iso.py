@@ -20,6 +20,9 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
+import shutil
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
@@ -73,6 +76,11 @@ class IsoInspection:
     filetree_sha256: Optional[str] = None
     files: list[FileEntry] = field(default_factory=list)
 
+    # Non-ISO9660 discs (classic-Mac HFS/APM) that pycdlib can't open but rb-cli
+    # can identify. We record the partition-table kind + volume name for identity;
+    # no filetree is walked (image_sha256 + size remain the primary fingerprint).
+    partition_table: Optional[str] = None   # e.g. "APM", "bare-HFS"
+
     # Health
     errors: list[str] = field(default_factory=list)
 
@@ -83,6 +91,56 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: f.read(CHUNK), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def _rbcli_hfs_probe(path: Path, insp: IsoInspection) -> None:
+    """Fallback identity for discs pycdlib can't open. rb-cli reads classic-Mac
+    HFS volumes (APM-wrapped or bare); if it finds an HFS partition, record the
+    partition-table kind + volume name so the disc is identifiable. No filetree
+    is walked — image_sha256 + size stay the primary fingerprint.
+
+    Best-effort: any failure (rb-cli absent, non-HFS image, parse error) leaves
+    `insp` untouched so the original pycdlib error stands.
+    """
+    rbcli = shutil.which("rb-cli")
+    if not rbcli:
+        return
+    try:
+        proc = subprocess.run(
+            [rbcli, "inspect", "--format", "json", "--quiet", str(path)],
+            capture_output=True, text=True, timeout=120,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return
+    if proc.returncode != 0 or not proc.stdout:
+        return
+    try:
+        parts = json.loads(proc.stdout).get("result", {}).get("partitions", [])
+    except (ValueError, AttributeError):
+        return
+
+    hfs = [
+        p for p in parts
+        if "HFS" in (p.get("partition_type_string") or "")
+        or "HFS" in (p.get("type_name") or "")
+    ]
+    if not hfs:
+        return
+
+    # APM disks report a real partition table; a bare HFS superfloppy reports none.
+    table = "APM" if any(not p.get("is_logical", False) and p.get("start_lba") for p in parts) else "bare-HFS"
+    insp.partition_table = table
+
+    # The APM partition name (parenthesised in type_name, e.g.
+    # "Apple_HFS (macTOPiX Partition Version 1)") is the closest thing to a
+    # volume label rb-cli exposes here.
+    tn = hfs[0].get("type_name") or ""
+    if "(" in tn and tn.rstrip().endswith(")"):
+        vol = tn[tn.index("(") + 1: tn.rindex(")")].strip()
+        if vol:
+            insp.volume_identifier = vol
+
+    insp.errors.append(f"read via rb-cli: {table} HFS (no ISO9660 filesystem)")
 
 
 def _hash_pycdlib_file(iso: pycdlib.PyCdlib, iso_path: str) -> tuple[int, str]:
@@ -268,6 +326,9 @@ def inspect_iso(path: Path) -> IsoInspection:
         iso.open(str(path))
     except Exception as exc:                                              # noqa: BLE001
         insp.errors.append(f"open failed: {exc!r}")
+        # pycdlib only reads ISO9660. Classic-Mac discs are HFS/APM and legitimately
+        # have no ISO9660 PVD; fall back to rb-cli to at least identify them.
+        _rbcli_hfs_probe(path, insp)
         return insp
 
     try:

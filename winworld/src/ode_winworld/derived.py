@@ -131,7 +131,7 @@ def already_processed(dl_sidecar: Path) -> bool:
     if not d.exists():
         return False
     rec = _read_sidecar(d) or {}
-    return rec.get("status") in {"ok", "no_disc_image"}
+    return rec.get("status") in {"ok", "no_disc_image", "hfs_identified"}
 
 
 def process_one(dl_sidecar: Path, *, dry_run: bool = False) -> dict:
@@ -200,6 +200,7 @@ def process_one(dl_sidecar: Path, *, dry_run: bool = False) -> dict:
         return rec
 
     any_clean = False
+    any_hfs = False
     for dp in disc_paths:
         insp = iso_mod.inspect_iso(dp)
         rec["disc_images"].append(asdict(insp))
@@ -208,6 +209,9 @@ def process_one(dl_sidecar: Path, *, dry_run: bool = False) -> dict:
         # the disc; the real signal is that we computed a filetree_sha256.
         if insp.filetree_sha256:
             any_clean = True
+        # Classic-Mac HFS/APM disc rb-cli could identify but pycdlib can't walk.
+        elif insp.partition_table:
+            any_hfs = True
 
     if any_clean:
         rec["status"] = "ok"
@@ -218,6 +222,11 @@ def process_one(dl_sidecar: Path, *, dry_run: bool = False) -> dict:
                 rec["deleted_archive"] = True
             except OSError as exc:
                 rec["errors"].append(f"could not delete .7z: {exc!r}")
+    elif any_hfs:
+        # Identified (HFS volume name + partition table) but not content-walked.
+        # Final so the daily cron won't re-extract it; keep the .7z since we
+        # never fully fingerprinted the contents.
+        rec["status"] = "hfs_identified"
     else:
         rec["status"] = "inspect_failed"
         rec["errors"].append("every disc image had inspection errors")
