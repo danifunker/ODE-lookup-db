@@ -54,15 +54,25 @@ def read_jsonl(path: Path = JSONL_PATH) -> Iterator[dict[str, Any]]:
 
 
 def write_jsonl(rows: Iterable[dict[str, Any]], path: Path = JSONL_PATH) -> int:
-    """Write rows sorted by redump_id for deterministic diffs. Returns row count."""
+    """Write rows sorted by redump_id for deterministic diffs. Returns row count.
+
+    Atomic: writes to a sibling temp file and os.replace()s it into place, so a
+    crash/kill mid-write can never leave a truncated JSONL. Matters for the
+    resumable backfill, whose frequent checkpoint flushes each rewrite the whole
+    file.
+    """
     sorted_rows = sorted(rows, key=lambda r: r["redump_id"])
     path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
     count = 0
-    with path.open("wb") as f:
+    with tmp.open("wb") as f:
         for row in sorted_rows:
             f.write(orjson.dumps(row, option=orjson.OPT_SORT_KEYS))
             f.write(b"\n")
             count += 1
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
     return count
 
 
