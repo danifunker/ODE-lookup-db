@@ -11,20 +11,24 @@ from ode_lookup_db.db import build_sqlite, read_jsonl, write_jsonl
 
 def _row(rid: int) -> dict:
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "redump_id": rid,
         "system": "pc",
         "title": f"Disc {rid}",
-        "redump_url": f"http://redump.org/disc/{rid}/",
+        "redump_url": f"https://redump.info/disc/{rid}",
         "serials": [f"SER-{rid}"],
         "region": ["USA"],
         "languages": ["en"],
         "languages_raw": ["English"],
         "catalog": f"CAT-{rid}",
+        "cuesheet_sha1": "c" * 40,
         "pvd": {"volume_identifier": f"VOL_{rid}", "system_identifier": "WIN32"},
         "tracks": [
-            {"number": 1, "type": "data", "sectors": 42, "crc32": "deadbeef",
-             "md5": "a" * 32, "sha1": "b" * 40, "size_bytes": 100},
+            {"number": 1, "type": "data", "pregap": "00:00:00", "length": "10:00:00", "sectors": 42},
+        ],
+        "files": [
+            {"filename": f"Disc {rid}.cue", "size_bytes": 100, "crc32": "deadbeef",
+             "md5": "a" * 32, "sha1": "b" * 40},
         ],
     }
 
@@ -47,17 +51,27 @@ def test_sqlite_build_and_lookup(tmp_path: Path):
 
     conn = sqlite3.connect(path)
     try:
-        # lookup by hash
-        cur = conn.execute("SELECT redump_id FROM redump_track WHERE sha1=?", ("b" * 40,))
+        # lookup by hash (hashes live in redump_file as of v3)
+        cur = conn.execute("SELECT redump_id FROM redump_file WHERE sha1=?", ("b" * 40,))
         assert sorted(r[0] for r in cur.fetchall()) == [1, 2]
 
         # tracks renamed type -> kind
         cur = conn.execute("SELECT kind FROM redump_track WHERE redump_id=1")
         assert cur.fetchone()[0] == "data"
 
-        # tracks.sectors promoted column (v2)
-        cur = conn.execute("SELECT sectors FROM redump_track WHERE redump_id=1 AND number=1")
-        assert cur.fetchone()[0] == 42
+        # tracks.sectors + timecodes (v3 physical layout)
+        cur = conn.execute(
+            "SELECT sectors, pregap, length FROM redump_track WHERE redump_id=1 AND number=1"
+        )
+        assert cur.fetchone() == (42, "00:00:00", "10:00:00")
+
+        # files carry the filename + hashes (v3)
+        cur = conn.execute("SELECT filename FROM redump_file WHERE redump_id=1 AND seq=0")
+        assert cur.fetchone()[0] == "Disc 1.cue"
+
+        # cuesheet_sha1 promoted to a disc column (v3)
+        cur = conn.execute("SELECT cuesheet_sha1 FROM redump_disc WHERE redump_id=1")
+        assert cur.fetchone()[0] == "c" * 40
 
         # lookup by serial
         cur = conn.execute("SELECT redump_id FROM redump_serial WHERE serial=?", ("SER-2",))
@@ -79,7 +93,7 @@ def test_sqlite_build_and_lookup(tmp_path: Path):
         row = conn.execute(
             "SELECT schema_version, source_commit, row_count FROM meta WHERE source='redump'"
         ).fetchone()
-        assert row == (2, "abc123", 2)
+        assert row == (3, "abc123", 2)
 
         # FTS5 over titles
         cur = conn.execute(

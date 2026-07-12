@@ -1,125 +1,665 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
 <head>
-<title>redump.org &bull; Myst</title>
-<meta name="author" content="Redump Team" />
-<meta name="description" content="Redump - disc images information" />
-<meta name="verify-v1" content="BE+hBNbeseE7psVMax1S2M7PMKlwT7ohSUgC5hvZy3k=" />
-<link rel="alternate" type="application/rss+xml" title="Redump RSS - Recent changes" href="/rss/recentchanges/" />
-<link rel="alternate" type="application/rss+xml" title="Redump Forum RSS - Latest posts" href="/rss/forum/" />
-<link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Redump" />
-<link rel="icon" href="/favicon.ico" />
-<link rel="shortcut icon" href="/favicon.ico" />
-<style type="text/css" media="screen">@import url('/styles/default.css');</style>
-<script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script>
-<script type="text/javascript">
-<!--//--><![CDATA[//><!--
-_uacct = "UA-695695-1";
-urchinTracker();
-//--><!]]>
-</script>
-<script type="text/javascript" src="/javascript/ajax.js"></script>
-<script type="text/javascript" src="/javascript/disc.js"></script>
-<script type="text/javascript">
-<!--//--><![CDATA[//><!--
-window.onload = function () {
-	document.getElementById('quicksearch').onfocus = function () {if (this.value == 'Quick search') this.value = '';}
-	document.getElementById('quicksearch').onblur  = function () {if (this.value == '') this.value = 'Quick search';}
-}
-//--><!]]>
-</script>
-<script type="text/javascript" src="/javascript/display.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Myst (Rerelease) - redump.info</title>
+    <meta property="description" content="redump.info - IBM PC compatible - CD">
+    <link rel="icon" href="/static/favicon.ico" sizes="any">
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/css/pico.min.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+    
+    
+    <script>
+        (function() {
+            var t = localStorage.getItem('theme');
+            if (t) document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script src="/static/js/htmx.min.js" defer></script>
+    
 </head>
-<body><div id="header"><img src="/images/logo-left.png" style="float: left;" alt="" /></div>
-<ul id="icons">
-<li><a href="/feeds/"><img src="/images/feed.png" alt="Feeds" title="Feeds" /></a></li>
-<li><a href="http://twitter.com/redump"><img src="/images/twitter.png" alt="Twitter" title="Twitter" /></a></li>
-</ul>
-<form action="/results/" method="post"><div class="menu"><input id="quicksearch" type="text" name="quicksearch" value="Quick search" /><a href="/">Main</a><a href="/discs/" id="menu1" onmouseout="hideelement('1');" onmouseover="showelement('1');">Discs</a><a href="/downloads/">Downloads</a><a id="menu4" onmouseout="hideelement('4');" onmouseover="showelement('4');">Site</a><a href="/guide/">Guide</a><a href="http://wiki.redump.org/">Wiki</a><a href="http://forum.redump.org/">Forum</a></div></form>
-<div class="submenu" id="submenu1" onmouseout="hideelement('1');" onmouseover="showelement('1');">
-<a href="/discs/system/arch/">&bull; Acorn Archimedes</a>
-<a href="/discs/system/mac/">&bull; Apple Macintosh</a>
-<a href="/discs/system/ajcd/">&bull; Atari Jaguar CD Interactive Multimedia System</a>
-<a href="/discs/system/pippin/">&bull; Bandai Pippin</a>
-<a href="/discs/system/qis/">&bull; Bandai Playdia Quick Interactive System</a>
-<a href="/discs/system/acd/">&bull; Commodore Amiga CD</a>
-<a href="/discs/system/cd32/">&bull; Commodore Amiga CD32</a>
-<a href="/discs/system/cdtv/">&bull; Commodore Amiga CDTV</a>
-<a href="/discs/system/fmt/">&bull; Fujitsu FM Towns series</a>
-<a href="/discs/system/fpp/">&bull; funworld Photo Play</a>
-<a href="/discs/system/pc/">&bull; IBM PC compatible</a>
-<a href="/discs/system/ite/">&bull; Incredible Technologies Eagle</a>
-<a href="/discs/system/kea/">&bull; Konami e-Amusement</a>
-<a href="/discs/system/kfb/">&bull; Konami FireBeat</a>
-<a href="/discs/system/ks573/">&bull; Konami System 573</a>
-<a href="/discs/system/ksgv/">&bull; Konami System GV</a>
-<a href="/discs/system/kt/">&bull; Konami Twinkle</a>
-<a href="/discs/system/ixl/">&bull; Mattel Fisher-Price iXL</a>
-<a href="/discs/system/hs/">&bull; Mattel HyperScan</a>
-<a href="/discs/system/vis/">&bull; Memorex Visual Information System</a>
-<a href="/discs/system/xbox/">&bull; Microsoft Xbox</a>
-<a href="/discs/system/xbox360/">&bull; Microsoft Xbox 360</a>
-<a href="/discs/system/trf/">&bull; Namco - Sega - Nintendo Triforce</a>
-<a href="/discs/system/ns12/">&bull; Namco System 12</a>
-<a href="/discs/system/ns246/">&bull; Namco System 246</a>
-<a href="/discs/system/pce/">&bull; NEC PC Engine CD & TurboGrafx CD</a>
-<a href="/discs/system/pc-88/">&bull; NEC PC-88 series</a>
-<a href="/discs/system/pc-98/">&bull; NEC PC-98 series</a>
-<a href="/discs/system/pc-fx/">&bull; NEC PC-FX & PC-FXGA</a>
-<a href="/discs/system/ngcd/">&bull; Neo Geo CD</a>
-<a href="/discs/system/gc/">&bull; Nintendo GameCube</a>
-<a href="/discs/system/wii/">&bull; Nintendo Wii</a>
-<a href="/discs/system/palm/">&bull; Palm OS</a>
-<a href="/discs/system/3do/">&bull; Panasonic 3DO Interactive Multiplayer</a>
-<a href="/discs/system/cdi/">&bull; Philips CD-i</a>
-<a href="/discs/system/photo-cd/">&bull; Photo CD</a>
-<a href="/discs/system/psxgs/">&bull; PlayStation GameShark Updates</a>
-<a href="/discs/system/ppc/">&bull; Pocket PC</a>
-<a href="/discs/system/chihiro/">&bull; Sega Chihiro</a>
-<a href="/discs/system/dc/">&bull; Sega Dreamcast</a>
-<a href="/discs/system/lindbergh/">&bull; Sega Lindbergh</a>
-<a href="/discs/system/mcd/">&bull; Sega Mega CD & Sega CD</a>
-<a href="/discs/system/naomi/">&bull; Sega Naomi</a>
-<a href="/discs/system/naomi2/">&bull; Sega Naomi 2</a>
-<a href="/discs/system/sp21/">&bull; Sega Prologue 21 Multimedia Karaoke System</a>
-<a href="/discs/system/sre/">&bull; Sega RingEdge</a>
-<a href="/discs/system/sre2/">&bull; Sega RingEdge 2</a>
-<a href="/discs/system/ss/">&bull; Sega Saturn</a>
-<a href="/discs/system/stv/">&bull; Sega Titan Video</a>
-<a href="/discs/system/x68k/">&bull; Sharp X68000</a>
-<a href="/discs/system/psx/">&bull; Sony PlayStation</a>
-<a href="/discs/system/ps2/">&bull; Sony PlayStation 2</a>
-<a href="/discs/system/ps3/">&bull; Sony PlayStation 3</a>
-<a href="/discs/system/psp/">&bull; Sony PlayStation Portable</a>
-<a href="/discs/system/quizard/">&bull; TAB-Austria Quizard</a>
-<a href="/discs/system/iktv/">&bull; Tao iKTV</a>
-<a href="/discs/system/ksite/">&bull; Tomy Kiss-Site</a>
-<a href="/discs/system/nuon/">&bull; VM Labs NUON</a>
-<a href="/discs/system/vflash/">&bull; VTech V.Flash & V.Smile Pro</a>
-<a href="/discs/system/gamewave/">&bull; ZAPiT Games Game Wave Family Entertainment System</a>
+<body>
+    <header class="container">
+        <nav class="site-nav">
+            <div class="site-nav-top">
+                <a class="site-banner" href="/" aria-label="Home">
+                    <img src="/static/images/branding/logo_v2.png" alt="redump.info">
+                </a>
+                <form class="quick-search" method="get" action="/discs" data-compact-get>
+                    <input type="text" name="q" placeholder="Search discs..." aria-label="Search">
+                </form>
+                <ul class="site-nav-auth">
+                    
+                    <li><a href="/login" role="button">Login</a></li>
+                    
+                    <li><button class="dark-mode-toggle" id="dark-mode-toggle" aria-label="Toggle dark mode" aria-pressed="false"><span class="dark-mode-toggle-thumb"></span></button></li>
+                </ul>
+            </div>
+            <ul class="site-nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/discs">Discs</a></li>
+                <li><a href="/downloads">Downloads</a></li>
+                
+                <li><a href="https://forum.redump.info">Forum</a></li>
+                <li><a href="https://wiki.redump.info">Wiki</a></li>
+                <li><a href="/about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        
+<div class="disc-view">
+<div class="disc-title-row">
+<div class="disc-title-box">
+<h2>Myst (Rerelease)</h2>
+
+</div>
+<div class="disc-title-actions">
+    
+    
+</div>
+</div>
+
+<div class="grid">
+    <section class="disc-info-section">
+        <h3>Disc</h3>
+        <table class="table-compact disc-info-table">
+            <tr><td><strong>System</strong></td><td><a href="/discs?system=PC">IBM PC compatible</a></td></tr>
+            <tr><td><strong>Media</strong></td><td>CD</td></tr>
+            <tr><td><strong>Category</strong></td><td>Games</td></tr>
+            
+            <tr><td><strong>Region</strong></td><td class="flags-inline flags-region">
+                
+                <a href="/discs?region=gb"><img class="flag-icon" src="/static/flags/gb.svg" title="UK" alt="UK"></a>
+                
+            </td></tr>
+            
+            
+            <tr><td><strong>Language</strong></td><td class="flags-inline flags-language">
+                
+                <img class="flag-icon" src="/static/flags/gb.svg" title="English" alt="English">
+                
+            </td></tr>
+            
+            
+            <tr><td><strong>Disc Serial</strong></td><td>SKM844AB-CD</td></tr>
+            
+            
+            <tr><td><strong>Edition</strong></td><td class="disc-edition-cell"><span class="disc-edition-value">SoftKey</span></td></tr>
+            
+            
+            <tr><td><strong>Barcode</strong></td><td>5 390102 438487</td></tr>
+            
+            
+            <tr><td><strong>Version</strong></td><td>1.3UK</td></tr>
+            
+            
+            <tr><td><strong>Errors</strong></td><td>0</td></tr>
+            
+            
+            
+            
+            
+            
+            
+        </table>
+    </section>
+
+    <div class="disc-side-stack">
+        <section class="dump-info-section">
+            <h3>Dump</h3>
+            <table class="table-compact">
+                <tr>
+                    <td><strong>Status</strong></td>
+                    <td><span class="status-dot unverified"></span> Unverified</td>
+                </tr>
+                
+                <tr><td><strong>Added</strong></td><td>2026-05-13 05:11 UTC</td></tr>
+                
+                
+                <tr><td><strong>Modified</strong></td><td>2026-05-13 05:11 UTC</td></tr>
+                
+                <tr>
+                    <td><strong>Dumper</strong></td>
+                    <td class="dumpers-cell"><a href="/discs?dumper=emuLOAD">emuLOAD</a></td>
+                </tr>
+            </table>
+        </section>
+
+        
+        <section class="section-collapsible">
+            
+
+            
+            <h3>Comments</h3>
+            <p class="pre-wrap disc-comments"><b>Volume Label</b>: MYST_UK</p>
+            
+
+            
+
+        </section>
+        
+    </div>
 </div>
 
 
-<div class="submenu" id="submenu4" onmouseout="hideelement('4');" onmouseover="showelement('4');">
-<b><a href="http://forum.redump.org/register/">Register</a></b>
-<a href="http://forum.redump.org/login/">Log in</a>
-<a href="http://forum.redump.org/users/">Users</a>
-<a href="irc://irc.redump.org/redump">IRC: #redump</a>
-<a href="mailto:admin@redump.org">E-mail</a>
+<section class="left-section detail-section">
+    <h3>Tracks</h3>
+    <div class="table-scroll table-scroll-compact">
+    <table class="disc-table striped table-nowrap tracks-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Type</th>
+                
+                <th>Pregap</th>
+                <th>Length</th>
+                <th>Sectors</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+            
+            <tr>
+                <td>01</td>
+                <td>Data/Mode 1</td>
+                
+                <td class="col-num"><code>00:00:00</code></td>
+                <td class="col-num"><code>69:22:11</code></td>
+                <td class="col-num"><code>312161</code></td>
+            </tr>
+            
+            
+            
+            <tr class="tracks-total-row">
+                <td></td>
+                <td><strong>Total</strong></td>
+                
+                <td></td>
+                <td class="col-num"><strong><code>69:22:11</code></strong></td>
+                <td class="col-num"><strong><code>312161</code></strong></td>
+            </tr>
+            
+            
+        </tbody>
+    </table>
+    </div>
+</section>
+
+
+<section class="left-section detail-section">
+    <h3>Files</h3>
+    <div class="table-scroll table-scroll-compact scroll-only">
+    <table class="disc-table files-table">
+        <thead>
+            <tr>
+                <th style="text-align: left;">Filename</th>
+                <th class="col-num">Size</th><th>CRC-32</th><th>MD5</th><th>SHA-1</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+            <tr>
+                <td style="text-align: left;" title="Myst (UK) (Rerelease).cue"><code><a href="/disc/133379/cue">Myst (UK) (Rerelease).cue</a></code></td>
+                <td class="col-num"><code>87</code></td>
+                <td><code>b19fdd9b</code></td>
+                <td><code>f9c8226c7c4f438677c7263a76f04f47</code></td>
+                <td><code>9675c0cd35945a1e50224cb17db53e8b01eb5413</code></td>
+            </tr>
+            
+            <tr>
+                <td style="text-align: left;" title="Myst (UK) (Rerelease).bin"><code>Myst (UK) (Rerelease).bin</code></td>
+                <td class="col-num"><code>734202672</code></td>
+                <td><code>9c5bfbb9</code></td>
+                <td><code>ba9514dc544f089d0f23cb5756b8097d</code></td>
+                <td><code>0e8fdf2af55e0bb1ddf0f674eebd9115a10f4793</code></td>
+            </tr>
+            
+            <tr class="files-synthetic-row" title="Synthetic merged image; not included in DAT files">
+                <td style="text-align: left;" title="Myst (UK) (Rerelease).img"><code>Myst (UK) (Rerelease).img</code></td>
+                <td class="col-num"><code>734202672</code></td>
+                <td><code>9c5bfbb9</code></td>
+                <td><code></code></td>
+                <td><code></code></td>
+            </tr>
+            
+        </tbody>
+    </table>
+    </div>
+</section>
+
+
+<section class="left-section detail-section">
+    <h3>Rings</h3>
+    <div class="table-scroll table-scroll-compact scroll-only">
+    <table class="disc-table ring-table">
+        <colgroup>
+            <col class="ring-entry-col">
+            <col class="ring-layer-col">
+        </colgroup>
+        <thead>
+            <tr>
+                <th class="ring-entry-col">#</th>
+                <th class="ring-layer-col"></th>
+                <th>Mastering Code</th>
+                <th>Mastering SID</th>
+                
+                <th>Mould SIDs</th>
+                
+                <th>Offset</th>
+                
+                
+                
+            </tr>
+        </thead>
+        <tbody>
+            
+            <tr class="">
+                <td class="entry-num ring-entry-cell">1</td>
+                <td class="ring-layer-col"><strong>L0</strong></td>
+                <td class="ring-fixed-cell">MADE IN IRELAND BY SATURN<span class="ring-tab-marker" title="Tab"></span>SKM844AB-CD<span class="ring-tab-marker" title="Tab"></span>SI6099</td>
+                <td class="ring-fixed-cell">IFPI LG01</td>
+                
+                <td class="ring-fixed-cell">IFPI 9K02</td>
+                
+                
+                <td class="ring-fixed-cell ring-entry-cell">-12</td>
+                
+                
+                
+                
+            </tr>
+            
+        </tbody>
+    </table>
+    </div>
+</section>
+
+
+
+
+<section class="left-section detail-section">
+    <h3>PVD</h3>
+    <div class="table-scroll table-scroll-compact">
+    <table class="table-nowrap binary-table">
+        <thead>
+            <tr><th></th><th>Contents</th><th>Date</th><th>Time</th><th>GMT</th></tr>
+        </thead>
+        <tbody>
+            
+            <tr>
+                <td>Creation</td>
+                <td><code>32 30 30 30 31 30 32 30 31 31 32 38 34 37 34 37 04</code></td>
+                <td><code>2000-10-20</code></td>
+                <td><code>11:28:47.47</code></td>
+                <td><code>+01:00</code></td>
+            </tr>
+            
+            <tr>
+                <td>Modification</td>
+                <td><code>32 30 30 30 31 30 32 30 31 31 32 39 34 36 36 33 00</code></td>
+                <td><code>2000-10-20</code></td>
+                <td><code>11:29:46.63</code></td>
+                <td><code>+00:00</code></td>
+            </tr>
+            
+            <tr>
+                <td>Expiration</td>
+                <td><code>00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</code></td>
+                <td><code>0000-00-00</code></td>
+                <td><code>00:00:00.00</code></td>
+                <td><code>+00:00</code></td>
+            </tr>
+            
+            <tr>
+                <td>Effective</td>
+                <td><code>00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</code></td>
+                <td><code>0000-00-00</code></td>
+                <td><code>00:00:00.00</code></td>
+                <td><code>+00:00</code></td>
+            </tr>
+            
+        </tbody>
+    </table>
+    </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="disc-bottom-actions">
+    
+    
 </div>
 
-
-
-<div id="main">
-<div class="tools"><b>Download:</b> <a href="/disc/133379/sha1/">SHA1</a> &bull; <a href="/disc/133379/md5/">MD5</a> &bull; <a href="/disc/133379/sfv/">SFV</a> &bull; <a href="/disc/133379/cue/">Cuesheet</a></div><h1>Myst</h1><div class="game"><table class="gameinfo" cellspacing="0">
-<tr><th>System</th><td><a href="/discs/system/pc/">IBM PC compatible</a></td></tr>
-<tr><th>Media</th><td>CD</td></tr>
-<tr><th>Category</th><td>Games</td></tr>
-<tr><th>Region</th><td><a href="/discs/region/Uk/"><img src="/images/regions/Uk.png" alt="UK" title="UK" /></a></td></tr>
-<tr><th>Languages</th><td><img src="/images/languages/eng.png" alt="English" title="English" /> </td></tr><tr><th>Serial</th><td>SKM844AB-CD</td></tr><tr><th>Version</th><td>1.3UK</td></tr><tr><th>Edition</th><td>SoftKey</td></tr><tr><th>Errors count</th><td>0</td></tr>
-<tr><th>Number of tracks</th><td>1</td></tr>
-<tr><th>Write offset</th><td>-12</td></tr><tr><td colspan="2"><br /></td></tr><tr><th>Added</th><td>2026-05-13 10:11</td></tr></table><div><table class="dumpinfo" cellspacing="0"><tr><th>Dumpers</th><td><div><a href="/discs/dumper/emuLOAD/">emuLOAD</a><br /></div></td></tr></table></div><table class="gamecomments" cellspacing="0"><tr><th>Barcode</th></tr><tr><td>5 390102 438487</td></tr><tr><th>Comments</th></tr><tr><td><b>Volume Label</b>: MYST_UK</td></tr></table></div><div><table class="tracks" cellspacing="0"><tr style="padding: 0px 0px; text-align: left;"><td style="padding: 0px 0px;" colspan="9"><h3>Track(s) <img src="/images/status/blue.png" alt="Dumped from original media" title="Dumped from original media" /> | Cuesheet <img src="/images/status/blue.png" alt="Has to be confirmed" title="Has to be confirmed" /></h3></td><td class="nohover" style="width: 100%;" rowspan="3"></td></tr><tr><th>#</th><th>Type</th><th>Pregap</th><th>Length</th><th>Sectors</th><th>Size</th><th>CRC-32</th><th>MD5</th><th>SHA-1</th></tr><tr><td>1</td><td>Data/Mode 1</td><td>00:00:00</td><td>69:22:11</td><td>312161</td><td>734202672</td><td>9c5bfbb9</td><td>ba9514dc544f089d0f23cb5756b8097d</td><td>0e8fdf2af55e0bb1ddf0f674eebd9115a10f4793</td></tr></table></div><div><table class="rings" cellspacing="0"><tr style="padding: 0px 0px; text-align: left;"><td style="padding: 0px 0px;" colspan="6"><h3>Rings</h3></td><td class="nohover" style="width: 100%;" rowspan="2"></td></tr><tr><th>#</th><th>Mastering Code (laser branded/etched)</th><th>Mastering SID Code</th><th>Mould SID Code</th><th></th><th>Write offset</th></tr><tr><td>1</td><td>MADE IN IRELAND BY SATURN&nbsp;&nbsp;&nbsp;SKM844AB-CD&nbsp;&nbsp;&nbsp;SI6099</td><td>IFPI LG01</td><td>IFPI 9K02</td><td><img src="/images/status/blue.png" alt="Has to be confirmed" title="Has to be confirmed" /></td><td>-12</td></tr></table></div><div><table class="pvd" cellspacing="0"><tr style="padding: 0px 0px; text-align: left;"><td style="padding: 0px 0px;" colspan="5"><h3>Primary Volume Descriptor (PVD) <img src="/images/status/blue.png" alt="Has to be confirmed" title="Has to be confirmed" /></h3></td><td class="nohover" style="width: 100%;" rowspan="5"></td></tr><tr><th>Record / Entry</th><th>Contents</th><th>Date</th><th>Time</th><th>GMT</th></tr><tr><td>Creation</td><td>32 30 30 30 31 30 32 30 31 31 32 38 34 37 34 37 04</td><td>2000-10-20</td><td>11:28:47.47</td><td>+01:00</td></tr><tr><td>Modification</td><td>32 30 30 30 31 30 32 30 31 31 32 39 34 36 36 33 00</td><td>2000-10-20</td><td>11:29:46.63</td><td>+00:00</td></tr><tr><td>Expiration</td><td>00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</td><td>&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;-&nbsp;&nbsp;</td><td>&nbsp;&nbsp;:&nbsp;&nbsp;:&nbsp;&nbsp;.&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;</td></tr><tr><td>Effective</td><td>00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</td><td>&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;-&nbsp;&nbsp;</td><td>&nbsp;&nbsp;:&nbsp;&nbsp;:&nbsp;&nbsp;.&nbsp;&nbsp;</td><td>&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;</td></tr><tr><th></th><th><b>Total: 68 bytes</b></th><th></th><th></th><th></th></tr></table></div>
 </div>
-<div id="online">Registered users online: <b>2</b> &bull; Guests online: <b>3800</b> &bull; Feed readers online: <b>25</b><br /><b>Online</b>: <a href="http://forum.redump.org/profile.php?id=63635">Bekoha</a>, <a href="http://forum.redump.org/profile.php?id=63903">Eris</a></div>
-<div id="footer">Redump 0.4<br />© 2005&ndash;2026 Redump Team</div></body>
+<script>
+(function() {
+    function refreshDetailSectionFit(wrapper, didOverflow) {
+        var section = wrapper.closest('.detail-section');
+        if (!section) return;
+        section.classList.toggle('table-fits', !didOverflow);
+        section.classList.toggle('table-overflows', didOverflow);
+    }
+
+    function alignFittingDetailSections() {
+        var discView = document.querySelector('.disc-view');
+        var hasOverflowingSection = !!document.querySelector('.disc-view .detail-section.table-overflows');
+        if (discView) {
+            discView.classList.toggle('has-overflowing-detail-sections', hasOverflowingSection);
+        }
+
+        var sections = Array.prototype.slice.call(document.querySelectorAll('.disc-view .detail-section.table-fits'));
+        if (!sections.length) return;
+
+        var maxWidth = 0;
+        sections.forEach(function(section) {
+            maxWidth = Math.max(maxWidth, Math.ceil(section.getBoundingClientRect().width));
+        });
+
+        sections.forEach(function(section) {
+            section.style.width = maxWidth + 'px';
+        });
+    }
+
+    function scaleBottomTables() {
+        document.querySelectorAll('.disc-view .detail-section .table-scroll:not(.scroll-only)').forEach(function(wrapper) {
+            var table = wrapper.querySelector('table');
+            if (!table) return;
+            var section = wrapper.closest('.detail-section');
+            if (section) {
+                section.classList.remove('table-fits');
+                section.classList.remove('table-overflows');
+                section.style.width = '';
+            }
+            table.style.transform = '';
+            table.style.transformOrigin = '';
+            wrapper.style.height = '';
+            wrapper.style.overflow = '';
+            wrapper.style.width = '';
+            var containerWidth = wrapper.clientWidth;
+            var tableWidth = table.scrollWidth;
+            // Tolerance avoids a false scrollbar from sub-pixel rounding of
+            // fixed-layout table widths.
+            if (tableWidth > containerWidth + 2 && containerWidth > 0) {
+                var scale = containerWidth / tableWidth;
+                table.style.transform = 'scale(' + scale + ')';
+                table.style.transformOrigin = 'top left';
+                wrapper.style.height = Math.ceil(table.offsetHeight * scale) + 'px';
+                wrapper.style.overflow = 'hidden';
+                refreshDetailSectionFit(wrapper, true);
+            } else {
+                refreshDetailSectionFit(wrapper, false);
+            }
+        });
+        document.querySelectorAll('.disc-view .detail-section .table-scroll.scroll-only').forEach(function(wrapper) {
+            var table = wrapper.querySelector('table');
+            if (!table) return;
+            var section = wrapper.closest('.detail-section');
+            if (section) {
+                section.classList.remove('table-fits');
+                section.classList.remove('table-overflows');
+                section.style.width = '';
+            }
+            wrapper.style.width = '';
+            var containerWidth = wrapper.clientWidth;
+            var tableWidth = table.scrollWidth;
+            // Tolerance avoids a false scrollbar from sub-pixel rounding of
+            // fixed-layout table widths.
+            refreshDetailSectionFit(wrapper, tableWidth > containerWidth + 2 && containerWidth > 0);
+            if (section && section.classList.contains('table-fits')) {
+                wrapper.style.width = tableWidth + 'px';
+            }
+        });
+        alignFittingDetailSections();
+        document.querySelectorAll('.dat-filename-scaler').forEach(function(wrapper) {
+            var p = wrapper.querySelector('.dat-filename');
+            if (!p) return;
+            p.style.transform = '';
+            p.style.transformOrigin = '';
+            wrapper.style.height = '';
+            var containerWidth = wrapper.clientWidth;
+            var contentWidth = p.scrollWidth;
+            if (contentWidth > containerWidth && containerWidth > 0) {
+                var scale = containerWidth / contentWidth;
+                p.style.transform = 'scale(' + scale + ')';
+                p.style.transformOrigin = 'top left';
+                wrapper.style.height = Math.ceil(p.offsetHeight * scale) + 'px';
+            }
+        });
+    }
+    document.addEventListener('DOMContentLoaded', scaleBottomTables);
+    window.addEventListener('resize', scaleBottomTables);
+})();
+</script>
+
+    </main>
+
+    <script>
+        (function() {
+            document.querySelectorAll('form[data-compact-get]').forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    var defaults = {};
+                    form.querySelectorAll('[name][data-default-value]').forEach(function(control) {
+                        defaults[control.name] = control.getAttribute('data-default-value');
+                    });
+
+                    var nonblankDependencies = {};
+                    form.querySelectorAll('[name][data-requires-nonblank]').forEach(function(control) {
+                        nonblankDependencies[control.name] = control.getAttribute('data-requires-nonblank');
+                    });
+
+                    var params = new URLSearchParams();
+                    new FormData(form).forEach(function(value, name) {
+                        if (typeof value !== 'string') return;
+                        if (value.trim() === '' || defaults[name] === value) return;
+                        var dependencyName = nonblankDependencies[name];
+                        var dependency = dependencyName && form.elements.namedItem(dependencyName);
+                        if (dependencyName && (!dependency || dependency.value.trim() === '')) return;
+                        params.append(name, value);
+                    });
+
+                    var target = new URL(form.action, window.location.href);
+                    target.search = params.toString();
+                    window.location.assign(target.pathname + target.search);
+                });
+            });
+        })();
+
+        (function() {
+            var toggle = document.getElementById('dark-mode-toggle');
+            if (!toggle) return;
+
+            function updateToggleState() {
+                toggle.setAttribute(
+                    'aria-pressed',
+                    document.documentElement.getAttribute('data-theme') === 'dark' ? 'true' : 'false'
+                );
+            }
+
+            updateToggleState();
+            toggle.addEventListener('click', function() {
+                var html = document.documentElement;
+                var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                updateToggleState();
+            });
+        })();
+
+        (function() {
+            var hoveredRow = null;
+
+            function isInteractiveElement(el) {
+                return el.closest('a, button, input, select, textarea, label, summary, [role="button"]');
+            }
+
+            function rowFromEvent(event) {
+                var row = event.target.closest && event.target.closest('tr[data-href]');
+                if (row) return row;
+
+                var rows = document.querySelectorAll('tr[data-href]');
+                for (var i = 0; i < rows.length; i++) {
+                    var rect = rows[i].getBoundingClientRect();
+                    if (
+                        event.clientX >= rect.left &&
+                        event.clientX <= rect.right &&
+                        event.clientY >= rect.top &&
+                        event.clientY <= rect.bottom
+                    ) {
+                        return rows[i];
+                    }
+                }
+                return null;
+            }
+
+            function openRow(row, event) {
+                var href = row && row.getAttribute('data-href');
+                if (!href) return;
+                if (event.metaKey || event.ctrlKey) {
+                    window.open(href, '_blank', 'noopener');
+                } else {
+                    window.location.href = href;
+                }
+            }
+
+            document.addEventListener('click', function(event) {
+                if (event.button !== 0 || isInteractiveElement(event.target)) return;
+                var row = rowFromEvent(event);
+                if (row) openRow(row, event);
+            });
+
+            document.addEventListener('mousemove', function(event) {
+                var row = rowFromEvent(event);
+                if (row === hoveredRow) return;
+                if (hoveredRow) hoveredRow.classList.remove('is-row-hover');
+                hoveredRow = row;
+                if (hoveredRow) hoveredRow.classList.add('is-row-hover');
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                var row = event.target.closest('tr[data-href]');
+                if (!row || event.target !== row) return;
+                event.preventDefault();
+                openRow(row, event);
+            });
+        })();
+
+        (function() {
+            function setActiveNavLink() {
+                var path = window.location.pathname;
+                var activeHref = null;
+                if (path === '/') {
+                    activeHref = '/';
+                } else if (path.indexOf('/disc') === 0) {
+                    activeHref = '/discs';
+                } else if (path.indexOf('/downloads') === 0) {
+                    activeHref = '/downloads';
+                } else if (path.indexOf('/queue') === 0) {
+                    activeHref = '/queue';
+                } else if (path.indexOf('/about') === 0) {
+                    activeHref = '/about';
+                }
+                if (!activeHref) return;
+                document.querySelectorAll('.site-nav-links a').forEach(function(link) {
+                    if (link.getAttribute('href') === activeHref) {
+                        link.setAttribute('aria-current', 'page');
+                    } else {
+                        link.removeAttribute('aria-current');
+                    }
+                });
+            }
+            document.addEventListener('DOMContentLoaded', setActiveNavLink);
+        })();
+
+        (function() {
+            function measureContentWidth(element) {
+                var minLeft = Infinity;
+                var maxRight = -Infinity;
+                Array.prototype.forEach.call(element.children, function(child) {
+                    var rect = child.getBoundingClientRect();
+                    if (rect.width <= 0) return;
+                    minLeft = Math.min(minLeft, rect.left);
+                    maxRight = Math.max(maxRight, rect.right);
+                });
+                return maxRight > minLeft ? maxRight - minLeft : element.scrollWidth;
+            }
+
+            function scaleNav() {
+                var header = document.querySelector('header.container');
+                var nav = header && header.querySelector('.site-nav');
+                var navTop = nav && nav.querySelector('.site-nav-top');
+                if (!nav || !navTop) return;
+
+                var navLinks = nav.querySelector('.site-nav-links');
+
+                // Reset
+                navTop.style.transform = '';
+                navTop.style.transformOrigin = '';
+                if (navLinks) {
+                    navLinks.style.transform = '';
+                    navLinks.style.transformOrigin = '';
+                    navLinks.style.marginTop = '';
+                }
+
+                var containerWidth = nav.clientWidth;
+                if (containerWidth <= 0) return;
+
+                // Measure actual child bounds without changing alignment; changing
+                // styles during mobile tap/resize can produce a visible flash.
+                var trueTopWidth = measureContentWidth(navTop);
+                var scaleTop = trueTopWidth > containerWidth ? containerWidth / trueTopWidth : 1;
+
+                var trueLinksWidth = 1;
+                if (navLinks) {
+                    trueLinksWidth = measureContentWidth(navLinks);
+                }
+                var scaleLinks = trueLinksWidth > containerWidth ? containerWidth / trueLinksWidth : 1;
+
+                if (scaleTop < 1) {
+                    navTop.style.transform = 'scale(' + scaleTop + ')';
+                    navTop.style.transformOrigin = 'top center';
+                    // Pull navLinks up to close the empty space left by the shrunken navTop
+                    if (navLinks) {
+                        var savedPx = navTop.offsetHeight * (1 - scaleTop);
+                        navLinks.style.marginTop = '-' + Math.floor(savedPx) + 'px';
+                    }
+                }
+                if (scaleLinks < 1 && navLinks) {
+                    navLinks.style.transform = 'scale(' + scaleLinks + ')';
+                    navLinks.style.transformOrigin = 'top center';
+                }
+            }
+
+            var scaleNavQueued = false;
+            function queueScaleNav() {
+                if (scaleNavQueued) return;
+                scaleNavQueued = true;
+                window.requestAnimationFrame(function() {
+                    scaleNavQueued = false;
+                    scaleNav();
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', queueScaleNav);
+            window.addEventListener('load', queueScaleNav);
+            window.addEventListener('resize', queueScaleNav);
+        })();
+    </script>
+
+</body>
 </html>

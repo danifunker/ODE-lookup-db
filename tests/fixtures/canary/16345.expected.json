@@ -1,12 +1,13 @@
 {
   "barcode": "0 14633 14145 0",
   "category": "Games",
-  "date_added": "2010-10-19 13:49",
-  "date_last_modified": "2026-06-08 01:54",
+  "cuesheet_sha1": "e6fa3fe7b8a1df20b0d0ed930a5314afeb3c969e",
+  "date_added": "2010-10-19 08:49 UTC",
+  "date_last_modified": "2026-06-07 20:54 UTC",
   "disc_structure": {
     "ifpi": "IFPI LB41",
     "layer_break": null,
-    "mould_sid": "IFPI 1030, IFPI 1020, IFPI 1071",
+    "mould_sid": "IFPI 1020, IFPI 1030, IFPI 1071",
     "ring_mastering_codes": [
       "1414507 + + A4279-01",
       "A4681-02 1414507"
@@ -20,19 +21,42 @@
     "donutbruit"
   ],
   "edition": "Original",
+  "files": [
+    {
+      "crc32": "bc572c06",
+      "filename": "American McGee's Alice (USA) (En,Fr,De,Es,Nl) (Disc 1).cue",
+      "md5": "f2bd822f7c950bbee13757876be6da44",
+      "sha1": "e6fa3fe7b8a1df20b0d0ed930a5314afeb3c969e",
+      "size_bytes": 120
+    },
+    {
+      "crc32": "33885420",
+      "filename": "American McGee's Alice (USA) (En,Fr,De,Es,Nl) (Disc 1).bin",
+      "md5": "79a2de46bce7e25382586af9eeb50a00",
+      "sha1": "110607211acc363e033cff4d02a6d6729a8e05eb",
+      "size_bytes": 769517952
+    },
+    {
+      "crc32": "33885420",
+      "filename": "American McGee's Alice (USA) (En,Fr,De,Es,Nl) (Disc 1).img",
+      "md5": null,
+      "sha1": null,
+      "size_bytes": 769517952
+    }
+  ],
   "languages": [
-    "nl",
     "en",
     "fr",
     "de",
-    "es"
+    "es",
+    "nl"
   ],
   "languages_raw": [
-    "Dutch",
     "English",
     "French",
     "German",
-    "Spanish"
+    "Spanish",
+    "Dutch"
   ],
   "media": "CD",
   "pvd": {
@@ -44,11 +68,11 @@
     "volume_identifier": "ALICE00A"
   },
   "redump_id": 16345,
-  "redump_url": "http://redump.org/disc/16345/",
+  "redump_url": "https://redump.info/disc/16345",
   "region": [
     "USA"
   ],
-  "schema_version": 2,
+  "schema_version": 3,
   "serials": [
     "1414507"
   ],
@@ -56,12 +80,10 @@
   "title": "American McGee's Alice (Disc 1)",
   "tracks": [
     {
-      "crc32": "33885420",
-      "md5": "79a2de46bce7e25382586af9eeb50a00",
+      "length": "72:42:26",
       "number": 1,
+      "pregap": "00:00:00",
       "sectors": 327176,
-      "sha1": "110607211acc363e033cff4d02a6d6729a8e05eb",
-      "size_bytes": 769517952,
       "type": "data"
     }
   ],

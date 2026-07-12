@@ -98,7 +98,7 @@ jobs:
           )
           gh release create "$TAG" "${ASSETS[@]}" \
             --title "Database $TAG" \
-            --notes "Automated daily build. Unified schema (redump v2, winworld v1). Decompress with: zstd -d ode-lookup.sqlite.zst" || \
+            --notes "Automated daily build. Unified schema (redump v3, winworld v1). Decompress with: zstd -d ode-lookup.sqlite.zst" || \
           gh release upload "$TAG" "${ASSETS[@]}" --clobber
           # Moving "latest" pointer for stable consumer URL
           gh release delete latest --yes --cleanup-tag || true

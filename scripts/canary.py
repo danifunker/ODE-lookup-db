@@ -1,14 +1,14 @@
-"""Canary: re-parse pinned known-stable disc pages against the *live* redump site.
+"""Canary: re-parse pinned known-stable disc pages against the *live* redump.info site.
 
-Purpose: catch the case where redump changes their HTML in a way that breaks the
+Purpose: catch the case where redump.info changes their HTML in a way that breaks the
 parser, before bad data lands in the JSONL.
 
 The subtlety: a live page can differ from its stored fixture for two very
 different reasons.
 
-  1. The parser broke (redump changed their HTML structure). This is what the
+  1. The parser broke (redump.info changed their HTML structure). This is what the
      canary exists to catch, and it must fail loudly.
-  2. A redump editor legitimately edited the disc's metadata (new title, extra
+  2. A redump.info editor legitimately edited the disc's metadata (new title, extra
      ring code, re-dump, etc.). The parser is fine; our frozen fixture is just
      stale. This must NOT kill the daily scrape.
 
@@ -151,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
             if args.strict:
                 hard_failures.append(msg)
             else:
-                # Parser is fine; redump edited the data. Don't break the run.
+                # Parser is fine; redump.info edited the data. Don't break the run.
                 drifted.append(msg)
 
     if args.update:

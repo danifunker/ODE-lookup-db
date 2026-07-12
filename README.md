@@ -3,7 +3,7 @@
 Auto-updated lookup database for optical-disc and software-archive identification, curated for the USBODE ecosystem.
 
 **Sources:**
-- [redump.org](http://redump.org) — PC and Mac CD/DVD metadata (tables `redump_*`)
+- [redump.info](https://redump.info) — PC and Mac CD/DVD metadata (tables `redump_*`)
 - [winworldpc.com](https://winworldpc.com) — abandonware archives (tables `winworld_*`)
 
 **Out of scope:** consoles, audio CDs, video discs. See `MIGRATION-unified-db.md` for the breaking-change migration notes if you previously consumed `redump.sqlite`.
@@ -85,7 +85,7 @@ Always check `meta.schema_version` for the source you're querying.
 
 ### Found a wrong/outdated disc entry?
 
-[Open a "Disc re-check request" issue](https://github.com/danifunker/ODE-lookup-db/issues/new?template=disc-recheck.yml). Include the `redump_id` (the number in the redump.org disc URL). The next daily run will re-scrape it and close the issue.
+[Open a "Disc re-check request" issue](https://github.com/danifunker/ODE-lookup-db/issues/new?template=disc-recheck.yml). Include the `redump_id` (the number in the redump.info disc URL). The next daily run will re-scrape it and close the issue.
 
 Recheck requests are processed up to **30 per UTC day**. If many are open, yours may roll over to the next run — no manual approval needed.
 

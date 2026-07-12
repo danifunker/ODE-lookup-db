@@ -27,6 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from ode_lookup_db import SCHEMA_VERSION  # noqa: E402
 from ode_lookup_db.db import read_jsonl, write_jsonl  # noqa: E402
 from ode_lookup_db.http_client import RedumpClient  # noqa: E402
 from ode_lookup_db.parser import ParseError, parse_disc_page  # noqa: E402
@@ -89,6 +90,12 @@ def main() -> int:
         help="Concurrent in-flight requests. Start spacing is still rate-limited "
              "to 1/sec; workers just stop us blocking on slow responses.",
     )
+    ap.add_argument(
+        "--backfill-all", action="store_true",
+        help="One-time redump.info migration: re-fetch EVERY known redump_id in the "
+             "JSONL and overwrite it with the new (schema v3) parse. Skips discovery. "
+             "Heavy: ~1 req/s over the whole DB. Resumable — rerun to continue.",
+    )
     ap.add_argument("--refresh-discovery", action="store_true", help="Rebuild discovery cache")
     ap.add_argument(
         "--full-discovery", action="store_true",
@@ -97,7 +104,7 @@ def main() -> int:
     )
     ap.add_argument(
         "--max-added-desc-pages", type=int, default=50,
-        help="Cap on /discs/sort/added/dir/desc pages walked when using checkpoint discovery.",
+        help="Cap on /discs?sort=added&order=desc pages walked when using checkpoint discovery.",
     )
     args = ap.parse_args()
 
@@ -113,7 +120,21 @@ def main() -> int:
         # --- Discovery ----------------------------------------------------------
         targets: list[tuple[int, str]] = []
         new_checkpoint: int | None = None
-        if args.full_discovery:
+        if args.backfill_all:
+            # One-time migration: re-fetch every known id and overwrite it with a
+            # fresh v3 parse. Resumable — rows already at the current schema
+            # version (i.e. flushed on a previous run) are skipped, so a rerun
+            # picks up where an interrupted run left off.
+            targets = [
+                (rid, row["system"])
+                for rid, row in sorted(rows_by_id.items())
+                if row.get("schema_version") != SCHEMA_VERSION
+            ]
+            log.info(
+                "backfill-all: %d of %d rows still below schema v%d — re-fetching",
+                len(targets), len(rows_by_id), SCHEMA_VERSION,
+            )
+        elif args.full_discovery:
             # Legacy path: per-system listing walk. Slow but exhaustive.
             cached = None if args.refresh_discovery else load_discovery()
             discovery: dict[str, list[int]] = {} if cached is None else dict(cached)
@@ -174,7 +195,7 @@ def main() -> int:
         # so redump's load is unchanged — we just stop blocking on slow responses.
         started = time.monotonic()
         last_flush = started
-        fetched = parsed = failed = 0
+        fetched = parsed = failed = dropped = 0
         dirty = 0
 
         def fetch_one(rid: int, system: str):
@@ -199,7 +220,18 @@ def main() -> int:
                     log.warning("disc %d fetch failed after retries: %s — skipping. "
                                 "Re-run scrape to retry this ID later.", rid, exc)
                 elif resp.status_code == 404:
-                    log.warning("disc %d returned 404 — skipping", rid)
+                    if args.backfill_all and rid in rows_by_id:
+                        # Backfill: the id is gone from redump.info (renumbered or
+                        # deleted upstream). We can't re-parse it to the current
+                        # schema, so drop the stale row rather than leave a
+                        # version-mismatched tombstone. The validator's shrink
+                        # warning (decision #5) surfaces the net removals.
+                        del rows_by_id[rid]
+                        dropped += 1
+                        dirty += 1
+                        log.warning("disc %d returned 404 — dropping stale row (backfill)", rid)
+                    else:
+                        log.warning("disc %d returned 404 — skipping", rid)
                 elif resp.status_code != 200:
                     log.warning("disc %d returned HTTP %d — skipping", rid, resp.status_code)
                 else:
@@ -251,8 +283,8 @@ def main() -> int:
         log.warning("not updating checkpoint (failed=%d): will retry next run", failed)
 
     log.info(
-        "done: fetched=%d parsed=%d failed=%d, total rows=%d",
-        fetched, parsed, failed, len(rows_by_id),
+        "done: fetched=%d parsed=%d failed=%d dropped=%d, total rows=%d",
+        fetched, parsed, failed, dropped, len(rows_by_id),
     )
     return 0
 

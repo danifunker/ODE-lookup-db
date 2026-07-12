@@ -2,14 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/danifunker/ODE-lookup-db/schema/disc.schema.json",
   "title": "Redump Disc",
-  "description": "One disc entry, schema v1. Forward-compatible: readers must ignore unknown fields; writers omit null/unknown values.",
+  "description": "One disc entry, schema v3 (redump.info). Tracks carry physical layout only; per-file hashes live in `files`. Forward-compatible: readers must ignore unknown fields; writers omit null/unknown values.",
   "type": "object",
-  "required": ["redump_id", "system", "title", "tracks", "redump_url", "schema_version"],
+  "required": ["redump_id", "system", "title", "tracks", "files", "redump_url", "schema_version"],
   "additionalProperties": true,
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 2
+      "const": 3
     },
     "redump_id": {
       "type": "integer",
@@ -77,7 +77,8 @@
     },
     "tracks": {
       "type": "array",
-      "minItems": 1,
+      "description": "Physical track layout. Empty for media with no track table (e.g. DVDs). Per-file hashes live in `files`.",
+      "minItems": 0,
       "items": {
         "type": "object",
         "required": ["number"],
@@ -85,7 +86,22 @@
         "properties": {
           "number": { "type": "integer", "minimum": 1 },
           "type": { "type": "string", "enum": ["data", "audio"] },
-          "sectors": { "type": ["integer", "null"], "minimum": 0 },
+          "pregap": { "type": ["string", "null"], "description": "MSF timecode (mm:ss:ff)" },
+          "length": { "type": ["string", "null"], "description": "MSF timecode (mm:ss:ff)" },
+          "sectors": { "type": ["integer", "null"], "minimum": 0 }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "description": "Dumped files with their hashes (the .cue plus one file per track/image).",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["filename"],
+        "additionalProperties": true,
+        "properties": {
+          "filename": { "type": "string", "minLength": 1 },
           "size_bytes": { "type": ["integer", "null"], "minimum": 0 },
           "crc32": {
             "type": ["string", "null"],
@@ -99,12 +115,7 @@
             "type": ["string", "null"],
             "pattern": "^[0-9a-f]{40}$"
           }
-        },
-        "anyOf": [
-          { "required": ["crc32"] },
-          { "required": ["md5"] },
-          { "required": ["sha1"] }
-        ]
+        }
       }
     },
     "cuesheet_sha1": {
@@ -132,7 +143,7 @@
     "date_last_modified": { "type": ["string", "null"] },
     "redump_url": {
       "type": "string",
-      "pattern": "^https?://redump\\.org/disc/[0-9]+/?$"
+      "pattern": "^https?://redump\\.(info|org)/disc/[0-9]+/?$"
     },
     "scraped_at": {
       "type": "string",
