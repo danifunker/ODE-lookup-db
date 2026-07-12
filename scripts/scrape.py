@@ -96,6 +96,11 @@ def main() -> int:
              "JSONL and overwrite it with the new (schema v3) parse. Skips discovery. "
              "Heavy: ~1 req/s over the whole DB. Resumable — rerun to continue.",
     )
+    ap.add_argument(
+        "--min-interval", type=float, default=1.0,
+        help="Minimum seconds between request starts (default 1.0 = 1 req/s). "
+             "Lower for a faster one-time backfill, e.g. 0.2 for ~5 req/s.",
+    )
     ap.add_argument("--refresh-discovery", action="store_true", help="Rebuild discovery cache")
     ap.add_argument(
         "--full-discovery", action="store_true",
@@ -116,7 +121,7 @@ def main() -> int:
     rows_by_id = {r["redump_id"]: r for r in read_jsonl()}
     log.info("loaded %d existing rows", len(rows_by_id))
 
-    with RedumpClient() as client:
+    with RedumpClient(min_interval=args.min_interval) as client:
         # --- Discovery ----------------------------------------------------------
         targets: list[tuple[int, str]] = []
         new_checkpoint: int | None = None
