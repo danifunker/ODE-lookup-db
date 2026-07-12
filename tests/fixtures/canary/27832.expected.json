@@ -1,8 +1,9 @@
 {
   "barcode": "0 43948 00767 0",
   "category": "Games",
-  "date_added": "2013-02-07 18:20",
-  "date_last_modified": "2019-08-10 08:52",
+  "cuesheet_sha1": "cc6b39740df7be5d9751f6723dbda9f2e650c5b5",
+  "date_added": "2013-02-07 13:20 UTC",
+  "date_last_modified": "2019-08-10 03:52 UTC",
   "disc_structure": {
     "ifpi": null,
     "layer_break": null,
@@ -16,6 +17,337 @@
     "Nexy"
   ],
   "edition": "Original",
+  "files": [
+    {
+      "crc32": "f2799a7d",
+      "filename": "Super Street Fighter II Turbo (USA).cue",
+      "md5": "4b814fd3170fd92a43b9e688a4a466ad",
+      "sha1": "cc6b39740df7be5d9751f6723dbda9f2e650c5b5",
+      "size_bytes": 5855
+    },
+    {
+      "crc32": "e33a679f",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 01).bin",
+      "md5": "3655edbb953b6b6ff6b26575b06e3a9f",
+      "sha1": "a35fc3fa04f8db3f1e195dfb083dbd0c3cadf558",
+      "size_bytes": 12545568
+    },
+    {
+      "crc32": "5a07c1dc",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 02).bin",
+      "md5": "dbe73c554463b50e4840ca00ebc3637d",
+      "sha1": "0eb8815e58c272d0891fe89b80cb6501625da9e9",
+      "size_bytes": 6178704
+    },
+    {
+      "crc32": "fe918a3b",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 03).bin",
+      "md5": "66d52f88a187213df9724b342a9bcb92",
+      "sha1": "a324120fe49691632d21a909616d2d6a13ab3eb3",
+      "size_bytes": 5623632
+    },
+    {
+      "crc32": "d3adee9c",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 04).bin",
+      "md5": "eab78e4b3e121a24cc67b5666c2f0dc7",
+      "sha1": "0283adf393102b16260c705e354278fa94be02b7",
+      "size_bytes": 21527856
+    },
+    {
+      "crc32": "8d07b7d5",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 05).bin",
+      "md5": "f8d8761b49deedaeba4c643b3449477d",
+      "sha1": "efe18cad727278fd5c04b80287471b1f17883fe2",
+      "size_bytes": 21527856
+    },
+    {
+      "crc32": "bf500705",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 06).bin",
+      "md5": "0e3bd79ce4a3bdbbf4012fef683324da",
+      "sha1": "9780fadbba4cb8baab280001a11fcd46502a1710",
+      "size_bytes": 22586256
+    },
+    {
+      "crc32": "347be790",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 07).bin",
+      "md5": "869ec91836dc8c718bbae0718ac02775",
+      "sha1": "0e1400305a2e739de5294d0c2b3004873113ab73",
+      "size_bytes": 22939056
+    },
+    {
+      "crc32": "bd849d94",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 08).bin",
+      "md5": "cf91f756f025806763080a10a802622e",
+      "sha1": "1cb743471e2f1e5da6884b2fb30a42648c572afc",
+      "size_bytes": 22939056
+    },
+    {
+      "crc32": "b1b82bcb",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 09).bin",
+      "md5": "0dcf52be89cb466f86f6225edd76bb34",
+      "sha1": "9ce16a7a6869926412cfa9adce174fa843e0037b",
+      "size_bytes": 21527856
+    },
+    {
+      "crc32": "fe35db75",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 10).bin",
+      "md5": "2d31c74f753e9ecec43ed6865091521f",
+      "sha1": "e44d8f89851b523ea28a1f7c2b5858bd3df99264",
+      "size_bytes": 21880656
+    },
+    {
+      "crc32": "9e09b9ce",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 11).bin",
+      "md5": "166dc8e87d6b8ca5d33a978198b17fce",
+      "sha1": "8ba3671b38625ac2c9f71a0f6f4aceb7b8b3d820",
+      "size_bytes": 21704256
+    },
+    {
+      "crc32": "231f0446",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 12).bin",
+      "md5": "99a1f7d06675475c5e35387fcf6c4d0c",
+      "sha1": "13a0f96112d2bde7603aac11da37394215130126",
+      "size_bytes": 21880656
+    },
+    {
+      "crc32": "7c3b9571",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 13).bin",
+      "md5": "93dccd48576cc617be07a6871e1f2eda",
+      "sha1": "672c0eeb011d8d12eee645f1b3c79c1ae22e7f82",
+      "size_bytes": 22057056
+    },
+    {
+      "crc32": "9a4c0cc4",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 14).bin",
+      "md5": "0d242d631887206f8bd5649ef5134e03",
+      "sha1": "9b01d0fd046fb9e451ee16fee415f875e78bee94",
+      "size_bytes": 21527856
+    },
+    {
+      "crc32": "6e6ed8a7",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 15).bin",
+      "md5": "c3703c9ecc792865db06539c4fb239ab",
+      "sha1": "6e1f1b02b14eaee4b00790a53df108d527da73b5",
+      "size_bytes": 22409856
+    },
+    {
+      "crc32": "b4767aaf",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 16).bin",
+      "md5": "d1cc4ae843fff6ebbe82a2eac4ee25b0",
+      "sha1": "8110a0efd276548b35321410f7699f208035e65a",
+      "size_bytes": 22233456
+    },
+    {
+      "crc32": "041eb8d6",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 17).bin",
+      "md5": "af38e9b1c17ec317122091e2b8ef77bb",
+      "sha1": "e3df59a733f90e44a5b6f32af31e60b61b3ca927",
+      "size_bytes": 21704256
+    },
+    {
+      "crc32": "7a1f0280",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 18).bin",
+      "md5": "5bc7c802b8c96731b5f3431ce51e6c5e",
+      "sha1": "3ebaa8e07e9c70f7db9ccda56efe527a7daa2c67",
+      "size_bytes": 21527856
+    },
+    {
+      "crc32": "fcc1e5bf",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 19).bin",
+      "md5": "ccb2cd26647bbc203fa6c5bdca36b0bf",
+      "sha1": "f0481dde6ec59b7847fe73bf9390e9b9e14d2e7c",
+      "size_bytes": 21527856
+    },
+    {
+      "crc32": "5015f8bf",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 20).bin",
+      "md5": "4c2b2c937edd8530ba2ae3fa935d5009",
+      "sha1": "bf6a96dc8ce3d81e1ba88c55814fdee19b1a1df6",
+      "size_bytes": 11174352
+    },
+    {
+      "crc32": "e022a13a",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 21).bin",
+      "md5": "39ec265d426df66944b25df0f183934b",
+      "sha1": "a78c78382ff9152c1a879925abcc30f96ba359ad",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "564c4853",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 22).bin",
+      "md5": "21474d1dd3ef0804d95def649b9d4ade",
+      "sha1": "9ed385148f847d336999a3260570f3f944690a15",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "33b9e9dc",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 23).bin",
+      "md5": "9e509769a8a31aceb1ac336de88a124e",
+      "sha1": "9f21ba84eedeb71cda267d7d7efa2afc2dadac57",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "541a61eb",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 24).bin",
+      "md5": "ae931b991ff08eeb157794f1a42dc01c",
+      "sha1": "54eadbc48b45c153f5f126e3acb1a27bfe0f47b2",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "b96a0b0a",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 25).bin",
+      "md5": "e3734240b4921afd45691af6075334eb",
+      "sha1": "5e408412575059847502b8e3c6399fac824ce42a",
+      "size_bytes": 11296656
+    },
+    {
+      "crc32": "25ea82ef",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 26).bin",
+      "md5": "a332ec2a30bf71dd53ad8b0bea153215",
+      "sha1": "71d6a41efb06d6a1bb7c6f46711bea3005b8f850",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "46082a0c",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 27).bin",
+      "md5": "08b5f97cd8c1612e8287779a29a50d52",
+      "sha1": "a42cad59e6abbc695c80f812c3ffea910206c3bf",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "a8cff9d1",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 28).bin",
+      "md5": "99d1885cbe9863bb1335f5801e6e7d2b",
+      "sha1": "ac179a9a4b20fbbde501f5a9c962656f5c0dce7f",
+      "size_bytes": 6515040
+    },
+    {
+      "crc32": "2333ee00",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 29).bin",
+      "md5": "9d684dad18aa3da7f6c176573fa8775f",
+      "sha1": "fda716e85d8a564c0db6cfa0e373cf87fd5fd200",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "3486a4f7",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 30).bin",
+      "md5": "778d3112fe2a00f9f9d1a0d4f9c1f3da",
+      "sha1": "8f73940f1b26afec75f748ad8e15d7744b009255",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "68700d42",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 31).bin",
+      "md5": "4e3c0a9152f72383497a0b2589c70c3e",
+      "sha1": "e0c4095c090b6398cd703f67343f3564fba7a548",
+      "size_bytes": 11473056
+    },
+    {
+      "crc32": "78d6a735",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 32).bin",
+      "md5": "37fe6f8cab8ae7d7c796d9e6533ee831",
+      "sha1": "3e95951de0c68edbdd44bc1cba0a7de3337d198c",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "e2865e75",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 33).bin",
+      "md5": "9df003f9426e17bc3b40892a753f9c12",
+      "sha1": "faeb2ff7f97da2543d004a8eb80abbb27d963edc",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "112c3e68",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 34).bin",
+      "md5": "fc6c757418aa2de31127ba13666b2ee9",
+      "sha1": "4970f38a2c8908d5a6f8a3985326cb20a16f1a25",
+      "size_bytes": 11825856
+    },
+    {
+      "crc32": "20d27ad4",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 35).bin",
+      "md5": "17e4c2ce9c8fa54524e6fc81dd48082f",
+      "sha1": "61ee65321081541bb212d1e209524123c6877f86",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "8fb06ff0",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 36).bin",
+      "md5": "1867df27bcf8ee0a6cbdf42418043c5a",
+      "sha1": "4158e28fe55075027ad23a0abbbf34417a1da2a8",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "213a220a",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 37).bin",
+      "md5": "4e4d34cce488550fcaed06a8f69ac305",
+      "sha1": "775e6e6adad4a108ec291273dba9ac8da09c712f",
+      "size_bytes": 10943856
+    },
+    {
+      "crc32": "94852d97",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 38).bin",
+      "md5": "18e6ab5210fb50b82365e716510bd2fa",
+      "sha1": "108454cd856cb254721357511ac24b0cf754df42",
+      "size_bytes": 5651856
+    },
+    {
+      "crc32": "a99bf599",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 39).bin",
+      "md5": "b5f84678d8560ff79f2f7a61a245fc6a",
+      "sha1": "5661d8c3190629989779ec50bec91065b0491d63",
+      "size_bytes": 1771056
+    },
+    {
+      "crc32": "a8694d0f",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 40).bin",
+      "md5": "1fdf0bc4552bbfaeae1dbedea2f5b81f",
+      "sha1": "e71a995813753c468d53c40bf40e69ece7e89714",
+      "size_bytes": 1058400
+    },
+    {
+      "crc32": "31e6904f",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 41).bin",
+      "md5": "67aefce2abcc864d923bc3afd23efd34",
+      "sha1": "df52b3cfd53026153766f8e01a40d73f86ff0f85",
+      "size_bytes": 1371216
+    },
+    {
+      "crc32": "36439636",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 42).bin",
+      "md5": "58033a483bb53c095ebcdfe4e2fef6fb",
+      "sha1": "1f0fb31ba021173707429f572898dde8edc01a59",
+      "size_bytes": 14775264
+    },
+    {
+      "crc32": "5c4036c0",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 43).bin",
+      "md5": "8239016d21afb163e2e3a68b3c046e93",
+      "sha1": "2dad640468eceefa99b906f7053d48f315d0647c",
+      "size_bytes": 1136016
+    },
+    {
+      "crc32": "b1946a9e",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 44).bin",
+      "md5": "128e7da84260aa425b9d80d0dcceac82",
+      "sha1": "ced069a8afbdf50b762845892bfc7f7a28673640",
+      "size_bytes": 2053296
+    },
+    {
+      "crc32": "19f4485d",
+      "filename": "Super Street Fighter II Turbo (USA) (Track 45).bin",
+      "md5": "c0dce7aaca91229d871550f22e21747c",
+      "sha1": "b50136dd3c2536f02facb96bb446bc9266fab1c9",
+      "size_bytes": 7719264
+    },
+    {
+      "crc32": "f7c53988",
+      "filename": "Super Street Fighter II Turbo (USA).img",
+      "md5": null,
+      "sha1": null,
+      "size_bytes": 605941056
+    }
+  ],
   "languages": [
     "en"
   ],
@@ -32,417 +364,327 @@
     "volume_identifier": null
   },
   "redump_id": 27832,
-  "redump_url": "http://redump.org/disc/27832/",
+  "redump_url": "https://redump.info/disc/27832",
   "region": [
     "USA"
   ],
-  "schema_version": 2,
+  "schema_version": 3,
   "system": "pc",
   "title": "Super Street Fighter II Turbo",
   "tracks": [
     {
-      "crc32": "e33a679f",
-      "md5": "3655edbb953b6b6ff6b26575b06e3a9f",
+      "length": "01:11:09",
       "number": 1,
+      "pregap": "00:00:00",
       "sectors": 5334,
-      "sha1": "a35fc3fa04f8db3f1e195dfb083dbd0c3cadf558",
-      "size_bytes": 12545568,
       "type": "data"
     },
     {
-      "crc32": "5a07c1dc",
-      "md5": "dbe73c554463b50e4840ca00ebc3637d",
+      "length": "00:35:02",
       "number": 2,
+      "pregap": "00:03:00",
       "sectors": 2627,
-      "sha1": "0eb8815e58c272d0891fe89b80cb6501625da9e9",
-      "size_bytes": 6178704,
       "type": "audio"
     },
     {
-      "crc32": "fe918a3b",
-      "md5": "66d52f88a187213df9724b342a9bcb92",
+      "length": "00:31:66",
       "number": 3,
+      "pregap": "00:02:00",
       "sectors": 2391,
-      "sha1": "a324120fe49691632d21a909616d2d6a13ab3eb3",
-      "size_bytes": 5623632,
       "type": "audio"
     },
     {
-      "crc32": "d3adee9c",
-      "md5": "eab78e4b3e121a24cc67b5666c2f0dc7",
+      "length": "02:02:03",
       "number": 4,
+      "pregap": "00:02:00",
       "sectors": 9153,
-      "sha1": "0283adf393102b16260c705e354278fa94be02b7",
-      "size_bytes": 21527856,
       "type": "audio"
     },
     {
-      "crc32": "8d07b7d5",
-      "md5": "f8d8761b49deedaeba4c643b3449477d",
+      "length": "02:02:03",
       "number": 5,
+      "pregap": "00:02:00",
       "sectors": 9153,
-      "sha1": "efe18cad727278fd5c04b80287471b1f17883fe2",
-      "size_bytes": 21527856,
       "type": "audio"
     },
     {
-      "crc32": "bf500705",
-      "md5": "0e3bd79ce4a3bdbbf4012fef683324da",
+      "length": "02:08:03",
       "number": 6,
+      "pregap": "00:02:00",
       "sectors": 9603,
-      "sha1": "9780fadbba4cb8baab280001a11fcd46502a1710",
-      "size_bytes": 22586256,
       "type": "audio"
     },
     {
-      "crc32": "347be790",
-      "md5": "869ec91836dc8c718bbae0718ac02775",
+      "length": "02:10:03",
       "number": 7,
+      "pregap": "00:02:00",
       "sectors": 9753,
-      "sha1": "0e1400305a2e739de5294d0c2b3004873113ab73",
-      "size_bytes": 22939056,
       "type": "audio"
     },
     {
-      "crc32": "bd849d94",
-      "md5": "cf91f756f025806763080a10a802622e",
+      "length": "02:10:03",
       "number": 8,
+      "pregap": "00:02:00",
       "sectors": 9753,
-      "sha1": "1cb743471e2f1e5da6884b2fb30a42648c572afc",
-      "size_bytes": 22939056,
       "type": "audio"
     },
     {
-      "crc32": "b1b82bcb",
-      "md5": "0dcf52be89cb466f86f6225edd76bb34",
+      "length": "02:02:03",
       "number": 9,
+      "pregap": "00:02:00",
       "sectors": 9153,
-      "sha1": "9ce16a7a6869926412cfa9adce174fa843e0037b",
-      "size_bytes": 21527856,
       "type": "audio"
     },
     {
-      "crc32": "fe35db75",
-      "md5": "2d31c74f753e9ecec43ed6865091521f",
+      "length": "02:04:03",
       "number": 10,
+      "pregap": "00:02:00",
       "sectors": 9303,
-      "sha1": "e44d8f89851b523ea28a1f7c2b5858bd3df99264",
-      "size_bytes": 21880656,
       "type": "audio"
     },
     {
-      "crc32": "9e09b9ce",
-      "md5": "166dc8e87d6b8ca5d33a978198b17fce",
+      "length": "02:03:03",
       "number": 11,
+      "pregap": "00:02:00",
       "sectors": 9228,
-      "sha1": "8ba3671b38625ac2c9f71a0f6f4aceb7b8b3d820",
-      "size_bytes": 21704256,
       "type": "audio"
     },
     {
-      "crc32": "231f0446",
-      "md5": "99a1f7d06675475c5e35387fcf6c4d0c",
+      "length": "02:04:03",
       "number": 12,
+      "pregap": "00:02:00",
       "sectors": 9303,
-      "sha1": "13a0f96112d2bde7603aac11da37394215130126",
-      "size_bytes": 21880656,
       "type": "audio"
     },
     {
-      "crc32": "7c3b9571",
-      "md5": "93dccd48576cc617be07a6871e1f2eda",
+      "length": "02:05:03",
       "number": 13,
+      "pregap": "00:02:00",
       "sectors": 9378,
-      "sha1": "672c0eeb011d8d12eee645f1b3c79c1ae22e7f82",
-      "size_bytes": 22057056,
       "type": "audio"
     },
     {
-      "crc32": "9a4c0cc4",
-      "md5": "0d242d631887206f8bd5649ef5134e03",
+      "length": "02:02:03",
       "number": 14,
+      "pregap": "00:02:00",
       "sectors": 9153,
-      "sha1": "9b01d0fd046fb9e451ee16fee415f875e78bee94",
-      "size_bytes": 21527856,
       "type": "audio"
     },
     {
-      "crc32": "6e6ed8a7",
-      "md5": "c3703c9ecc792865db06539c4fb239ab",
+      "length": "02:07:03",
       "number": 15,
+      "pregap": "00:02:00",
       "sectors": 9528,
-      "sha1": "6e1f1b02b14eaee4b00790a53df108d527da73b5",
-      "size_bytes": 22409856,
       "type": "audio"
     },
     {
-      "crc32": "b4767aaf",
-      "md5": "d1cc4ae843fff6ebbe82a2eac4ee25b0",
+      "length": "02:06:03",
       "number": 16,
+      "pregap": "00:02:00",
       "sectors": 9453,
-      "sha1": "8110a0efd276548b35321410f7699f208035e65a",
-      "size_bytes": 22233456,
       "type": "audio"
     },
     {
-      "crc32": "041eb8d6",
-      "md5": "af38e9b1c17ec317122091e2b8ef77bb",
+      "length": "02:03:03",
       "number": 17,
+      "pregap": "00:02:00",
       "sectors": 9228,
-      "sha1": "e3df59a733f90e44a5b6f32af31e60b61b3ca927",
-      "size_bytes": 21704256,
       "type": "audio"
     },
     {
-      "crc32": "7a1f0280",
-      "md5": "5bc7c802b8c96731b5f3431ce51e6c5e",
+      "length": "02:02:03",
       "number": 18,
+      "pregap": "00:02:00",
       "sectors": 9153,
-      "sha1": "3ebaa8e07e9c70f7db9ccda56efe527a7daa2c67",
-      "size_bytes": 21527856,
       "type": "audio"
     },
     {
-      "crc32": "fcc1e5bf",
-      "md5": "ccb2cd26647bbc203fa6c5bdca36b0bf",
+      "length": "02:02:03",
       "number": 19,
+      "pregap": "00:02:00",
       "sectors": 9153,
-      "sha1": "f0481dde6ec59b7847fe73bf9390e9b9e14d2e7c",
-      "size_bytes": 21527856,
       "type": "audio"
     },
     {
-      "crc32": "5015f8bf",
-      "md5": "4c2b2c937edd8530ba2ae3fa935d5009",
+      "length": "01:03:26",
       "number": 20,
+      "pregap": "00:02:00",
       "sectors": 4751,
-      "sha1": "bf6a96dc8ce3d81e1ba88c55814fdee19b1a1df6",
-      "size_bytes": 11174352,
       "type": "audio"
     },
     {
-      "crc32": "e022a13a",
-      "md5": "39ec265d426df66944b25df0f183934b",
+      "length": "01:02:03",
       "number": 21,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "a78c78382ff9152c1a879925abcc30f96ba359ad",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "564c4853",
-      "md5": "21474d1dd3ef0804d95def649b9d4ade",
+      "length": "01:02:03",
       "number": 22,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "9ed385148f847d336999a3260570f3f944690a15",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "33b9e9dc",
-      "md5": "9e509769a8a31aceb1ac336de88a124e",
+      "length": "01:02:03",
       "number": 23,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "9f21ba84eedeb71cda267d7d7efa2afc2dadac57",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "541a61eb",
-      "md5": "ae931b991ff08eeb157794f1a42dc01c",
+      "length": "01:02:03",
       "number": 24,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "54eadbc48b45c153f5f126e3acb1a27bfe0f47b2",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "b96a0b0a",
-      "md5": "e3734240b4921afd45691af6075334eb",
+      "length": "01:04:03",
       "number": 25,
+      "pregap": "00:02:00",
       "sectors": 4803,
-      "sha1": "5e408412575059847502b8e3c6399fac824ce42a",
-      "size_bytes": 11296656,
       "type": "audio"
     },
     {
-      "crc32": "25ea82ef",
-      "md5": "a332ec2a30bf71dd53ad8b0bea153215",
+      "length": "01:02:03",
       "number": 26,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "71d6a41efb06d6a1bb7c6f46711bea3005b8f850",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "46082a0c",
-      "md5": "08b5f97cd8c1612e8287779a29a50d52",
+      "length": "01:02:03",
       "number": 27,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "a42cad59e6abbc695c80f812c3ffea910206c3bf",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "a8cff9d1",
-      "md5": "99d1885cbe9863bb1335f5801e6e7d2b",
+      "length": "00:36:70",
       "number": 28,
+      "pregap": "00:02:00",
       "sectors": 2770,
-      "sha1": "ac179a9a4b20fbbde501f5a9c962656f5c0dce7f",
-      "size_bytes": 6515040,
       "type": "audio"
     },
     {
-      "crc32": "2333ee00",
-      "md5": "9d684dad18aa3da7f6c176573fa8775f",
+      "length": "01:02:03",
       "number": 29,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "fda716e85d8a564c0db6cfa0e373cf87fd5fd200",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "3486a4f7",
-      "md5": "778d3112fe2a00f9f9d1a0d4f9c1f3da",
+      "length": "01:02:03",
       "number": 30,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "8f73940f1b26afec75f748ad8e15d7744b009255",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "68700d42",
-      "md5": "4e3c0a9152f72383497a0b2589c70c3e",
+      "length": "01:05:03",
       "number": 31,
+      "pregap": "00:02:00",
       "sectors": 4878,
-      "sha1": "e0c4095c090b6398cd703f67343f3564fba7a548",
-      "size_bytes": 11473056,
       "type": "audio"
     },
     {
-      "crc32": "78d6a735",
-      "md5": "37fe6f8cab8ae7d7c796d9e6533ee831",
+      "length": "01:02:03",
       "number": 32,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "3e95951de0c68edbdd44bc1cba0a7de3337d198c",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "e2865e75",
-      "md5": "9df003f9426e17bc3b40892a753f9c12",
+      "length": "01:02:03",
       "number": 33,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "faeb2ff7f97da2543d004a8eb80abbb27d963edc",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "112c3e68",
-      "md5": "fc6c757418aa2de31127ba13666b2ee9",
+      "length": "01:07:03",
       "number": 34,
+      "pregap": "00:02:00",
       "sectors": 5028,
-      "sha1": "4970f38a2c8908d5a6f8a3985326cb20a16f1a25",
-      "size_bytes": 11825856,
       "type": "audio"
     },
     {
-      "crc32": "20d27ad4",
-      "md5": "17e4c2ce9c8fa54524e6fc81dd48082f",
+      "length": "01:02:03",
       "number": 35,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "61ee65321081541bb212d1e209524123c6877f86",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "8fb06ff0",
-      "md5": "1867df27bcf8ee0a6cbdf42418043c5a",
+      "length": "01:02:03",
       "number": 36,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "4158e28fe55075027ad23a0abbbf34417a1da2a8",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "213a220a",
-      "md5": "4e4d34cce488550fcaed06a8f69ac305",
+      "length": "01:02:03",
       "number": 37,
+      "pregap": "00:02:00",
       "sectors": 4653,
-      "sha1": "775e6e6adad4a108ec291273dba9ac8da09c712f",
-      "size_bytes": 10943856,
       "type": "audio"
     },
     {
-      "crc32": "94852d97",
-      "md5": "18e6ab5210fb50b82365e716510bd2fa",
+      "length": "00:32:03",
       "number": 38,
+      "pregap": "00:02:00",
       "sectors": 2403,
-      "sha1": "108454cd856cb254721357511ac24b0cf754df42",
-      "size_bytes": 5651856,
       "type": "audio"
     },
     {
-      "crc32": "a99bf599",
-      "md5": "b5f84678d8560ff79f2f7a61a245fc6a",
+      "length": "00:10:03",
       "number": 39,
+      "pregap": "00:02:00",
       "sectors": 753,
-      "sha1": "5661d8c3190629989779ec50bec91065b0491d63",
-      "size_bytes": 1771056,
       "type": "audio"
     },
     {
-      "crc32": "a8694d0f",
-      "md5": "1fdf0bc4552bbfaeae1dbedea2f5b81f",
+      "length": "00:06:00",
       "number": 40,
+      "pregap": "00:02:00",
       "sectors": 450,
-      "sha1": "e71a995813753c468d53c40bf40e69ece7e89714",
-      "size_bytes": 1058400,
       "type": "audio"
     },
     {
-      "crc32": "31e6904f",
-      "md5": "67aefce2abcc864d923bc3afd23efd34",
+      "length": "00:07:58",
       "number": 41,
+      "pregap": "00:02:00",
       "sectors": 583,
-      "sha1": "df52b3cfd53026153766f8e01a40d73f86ff0f85",
-      "size_bytes": 1371216,
       "type": "audio"
     },
     {
-      "crc32": "36439636",
-      "md5": "58033a483bb53c095ebcdfe4e2fef6fb",
+      "length": "01:23:57",
       "number": 42,
+      "pregap": "00:02:00",
       "sectors": 6282,
-      "sha1": "1f0fb31ba021173707429f572898dde8edc01a59",
-      "size_bytes": 14775264,
       "type": "audio"
     },
     {
-      "crc32": "5c4036c0",
-      "md5": "8239016d21afb163e2e3a68b3c046e93",
+      "length": "00:06:33",
       "number": 43,
+      "pregap": "00:02:00",
       "sectors": 483,
-      "sha1": "2dad640468eceefa99b906f7053d48f315d0647c",
-      "size_bytes": 1136016,
       "type": "audio"
     },
     {
-      "crc32": "b1946a9e",
-      "md5": "128e7da84260aa425b9d80d0dcceac82",
+      "length": "00:11:48",
       "number": 44,
+      "pregap": "00:02:00",
       "sectors": 873,
-      "sha1": "ced069a8afbdf50b762845892bfc7f7a28673640",
-      "size_bytes": 2053296,
       "type": "audio"
     },
     {
-      "crc32": "19f4485d",
-      "md5": "c0dce7aaca91229d871550f22e21747c",
+      "length": "00:43:57",
       "number": 45,
+      "pregap": "00:02:00",
       "sectors": 3282,
-      "sha1": "b50136dd3c2536f02facb96bb446bc9266fab1c9",
-      "size_bytes": 7719264,
       "type": "audio"
     }
   ],

@@ -8,12 +8,13 @@ from ode_lookup_db.validator import MAX_NEW_ROWS_PER_RUN, validate_rows
 
 def _row(rid: int, **overrides) -> dict:
     base = {
-        "schema_version": 2,
+        "schema_version": 3,
         "redump_id": rid,
         "system": "pc",
         "title": f"Test Disc {rid}",
-        "redump_url": f"http://redump.org/disc/{rid}/",
-        "tracks": [{"number": 1, "type": "data", "crc32": "deadbeef"}],
+        "redump_url": f"https://redump.info/disc/{rid}",
+        "tracks": [{"number": 1, "type": "data", "sectors": 42}],
+        "files": [{"filename": f"Test Disc {rid}.bin", "crc32": "deadbeef"}],
     }
     base.update(overrides)
     return base
@@ -37,7 +38,7 @@ def test_system_not_in_allowlist_is_hard_failure():
 
 
 def test_bad_hash_format_is_hard_failure():
-    bad = _row(1, tracks=[{"number": 1, "crc32": "nothex!!"}])
+    bad = _row(1, files=[{"filename": "x.bin", "crc32": "nothex!!"}])
     report = validate_rows([bad])
     assert not report.ok
 
@@ -62,7 +63,9 @@ def test_shrink_is_warning_not_failure():
     assert any("shrank" in w for w in report.warnings)
 
 
-def test_track_must_have_at_least_one_hash():
-    bad = _row(1, tracks=[{"number": 1, "type": "data"}])
+def test_files_are_required():
+    bad = _row(1)
+    del bad["files"]
     report = validate_rows([bad])
     assert not report.ok
+    assert any("files" in e for e in report.hard_errors)

@@ -1,4 +1,4 @@
-"""Polite HTTP client for redump.org.
+"""Polite HTTP client for redump.info.
 
 - Single-host, rate-limited to <=1 req/sec.
 - Identifies itself via a custom User-Agent pointing at this repo.
@@ -24,7 +24,7 @@ from . import USER_AGENT
 
 log = logging.getLogger(__name__)
 
-REDUMP_BASE = "http://redump.org"
+REDUMP_BASE = "https://redump.info"
 MIN_INTERVAL_SECONDS = 1.0
 
 
@@ -83,12 +83,16 @@ class RedumpClient:
         return resp
 
     def get_disc(self, redump_id: int) -> httpx.Response:
-        return self.get(f"/disc/{redump_id}/")
+        # redump.info serves the disc page at the no-trailing-slash path; the
+        # trailing-slash form 308-redirects here, so skip the extra hop.
+        return self.get(f"/disc/{redump_id}")
 
     def get_system_page(self, system_slug: str, page: int = 1) -> httpx.Response:
-        # Redump system listings: http://redump.org/discs/system/<slug>/?page=N
-        return self.get(f"/discs/system/{system_slug}/?page={page}")
+        # redump.info per-system listing, newest-added first:
+        #   https://redump.info/discs?system=<SLUG>&sort=added&order=desc&page=N
+        return self.get(f"/discs?system={system_slug}&sort=added&order=desc&page={page}")
 
     def get_added_desc_page(self, page: int = 1) -> httpx.Response:
-        # All-systems listing, newest-added first: http://redump.org/discs/sort/added/dir/desc/?page=N
-        return self.get(f"/discs/sort/added/dir/desc/?page={page}")
+        # All-systems listing, newest-added first:
+        #   https://redump.info/discs?sort=added&order=desc&page=N
+        return self.get(f"/discs?sort=added&order=desc&page={page}")

@@ -7,7 +7,7 @@ body:
     id: redump_id
     attributes:
       label: redump_id
-      description: The numeric ID from the redump.org disc URL (e.g. 133460 from http://redump.org/disc/133460/).
+      description: The numeric ID from the redump.info disc URL (e.g. 133460 from https://redump.info/disc/133460).
       placeholder: "133460"
     validations:
       required: true

@@ -1,7 +1,8 @@
 {
   "category": "Games",
-  "date_added": "2022-12-05 21:23",
-  "date_last_modified": "2022-12-05 21:23",
+  "cuesheet_sha1": "08035d4bd3b99e9deb9016a8acfa1f59637fbedd",
+  "date_added": "2022-12-05 16:23 UTC",
+  "date_last_modified": "2022-12-05 16:23 UTC",
   "disc_structure": {
     "ifpi": "L383",
     "layer_break": null,
@@ -14,6 +15,218 @@
     "JustTheMan"
   ],
   "edition": "Original",
+  "files": [
+    {
+      "crc32": "d2d7fa78",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA).cue",
+      "md5": "983079dc7e3806bb56eb5134192874fa",
+      "sha1": "08035d4bd3b99e9deb9016a8acfa1f59637fbedd",
+      "size_bytes": 3790
+    },
+    {
+      "crc32": "272defe8",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 01).bin",
+      "md5": "1267be089821cfb5922c4d027f892991",
+      "sha1": "a885a11c44c54620d88bb8da94a58720216919a9",
+      "size_bytes": 143116848
+    },
+    {
+      "crc32": "741c5854",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 02).bin",
+      "md5": "4cd35c53e7f76e8478572a1946f1107e",
+      "sha1": "5050acb9986eef861c595c91e1a487eae4079182",
+      "size_bytes": 24310272
+    },
+    {
+      "crc32": "ca818222",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 03).bin",
+      "md5": "1c6d75a2eab483bd5990ad3f46c6d9bb",
+      "sha1": "f47bd027605793f3c4a911a7354029024c072967",
+      "size_bytes": 25232256
+    },
+    {
+      "crc32": "aaab8789",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 04).bin",
+      "md5": "dfc04e2edd42b3e85da5fde535e3dbc5",
+      "sha1": "f6d377f7cded6b0bebdbd1360a1e948d356c23df",
+      "size_bytes": 20290704
+    },
+    {
+      "crc32": "60f76804",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 05).bin",
+      "md5": "0e8936a176e667c6141fe35d6025c728",
+      "sha1": "089a2553bf52b0cafee39a45d6087faa04347ca8",
+      "size_bytes": 18265632
+    },
+    {
+      "crc32": "a3cc81ae",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 06).bin",
+      "md5": "5e0e4a4ecfd0d3701a3a5486a9537a21",
+      "sha1": "a8f793fdf6fcd7410d7bffcb966b323baff44b9f",
+      "size_bytes": 24881808
+    },
+    {
+      "crc32": "76af3fe7",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 07).bin",
+      "md5": "7f3140aecd649abf2c132f79b65e5938",
+      "sha1": "5b246287912bd99a02354cf2d665db51c741c710",
+      "size_bytes": 19380480
+    },
+    {
+      "crc32": "096fc073",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 08).bin",
+      "md5": "bb3654588a35afe9bd3bf12a81ddfe65",
+      "sha1": "cc866f3996d4e21017e8ac8b7c33aa0469d7e749",
+      "size_bytes": 23665824
+    },
+    {
+      "crc32": "a48f2bd1",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 09).bin",
+      "md5": "85ef28b54c4469e5d009476d63ddcf79",
+      "sha1": "c5c74555ea07e29d54b94690726b747a51519585",
+      "size_bytes": 18524352
+    },
+    {
+      "crc32": "2876b365",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 10).bin",
+      "md5": "d05b85283a0c0adb334572309883cada",
+      "sha1": "ccf612c3c752f462f4df1729f4f5df8ae60ccc4a",
+      "size_bytes": 24068016
+    },
+    {
+      "crc32": "83149cd3",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 11).bin",
+      "md5": "b9cee21b98868397bb0499142483bcb2",
+      "sha1": "232b558677a56cc362a53b988f8a32ce12e65aa1",
+      "size_bytes": 25930800
+    },
+    {
+      "crc32": "07fb8222",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 12).bin",
+      "md5": "c2c6ee3406c5c07fdb03a04ee5e722cd",
+      "sha1": "3e004de03676c4266e11556adfc0ea5e907f3a2d",
+      "size_bytes": 23903376
+    },
+    {
+      "crc32": "1282564c",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 13).bin",
+      "md5": "dc0849715ce2c480fb594cbf60e7bf7a",
+      "sha1": "ed97c2dcaa65dc88a90d9b8ea6bc768447729420",
+      "size_bytes": 23985696
+    },
+    {
+      "crc32": "65e3c105",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 14).bin",
+      "md5": "70a608c42258e32d63820bbd873f4bd6",
+      "sha1": "4e34f485dfc082dc7e3dc37826e545981b6debd5",
+      "size_bytes": 26055456
+    },
+    {
+      "crc32": "a0bc6617",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 15).bin",
+      "md5": "23d7a458d341901a220dbcbb75bc5036",
+      "sha1": "fba0d25e0fb26f094561fa4888d52bbb9f70ba4a",
+      "size_bytes": 24672480
+    },
+    {
+      "crc32": "2e6888ea",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 16).bin",
+      "md5": "16dc0dd3eaf5087531ff9381579c6d09",
+      "sha1": "0990f696a0ecb9ed006574771838713146dc984b",
+      "size_bytes": 22339296
+    },
+    {
+      "crc32": "01056ac1",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 17).bin",
+      "md5": "92f10b01ad2805ffa2aaa681659fd487",
+      "sha1": "c40a6eadd28bb0aff20340a112a519aad594cd45",
+      "size_bytes": 33551280
+    },
+    {
+      "crc32": "344f96dd",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 18).bin",
+      "md5": "3e91c6c872e8bec94fb473d1685e9edf",
+      "sha1": "99b6cae82dcaf6d19f3364f112e8bd95a6e881e3",
+      "size_bytes": 21497280
+    },
+    {
+      "crc32": "5a4f82c9",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 19).bin",
+      "md5": "fe6d56d6cdf735a862c632ad7e587db6",
+      "sha1": "b65d44b9b2e092bca6b9845d8677d6a216ac83ed",
+      "size_bytes": 28249872
+    },
+    {
+      "crc32": "78c64682",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 20).bin",
+      "md5": "b5af54666baf007ae1c36853721fac03",
+      "sha1": "60f31e1572d21e4de94031841140710b5db12dfb",
+      "size_bytes": 24752448
+    },
+    {
+      "crc32": "20435417",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 21).bin",
+      "md5": "530ee65b77f979a71f515807621d3ce4",
+      "sha1": "2c867ddd102a80680689ea5d38a17a9d9829ba31",
+      "size_bytes": 22790880
+    },
+    {
+      "crc32": "85c3ce79",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 22).bin",
+      "md5": "038e04f050e326e751b4c757e7577e25",
+      "sha1": "99a6a053550300f0cf0eb16506956dd751917d3b",
+      "size_bytes": 22475712
+    },
+    {
+      "crc32": "c0d422d7",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 23).bin",
+      "md5": "4925af359168418614133d41fbaa720e",
+      "sha1": "feb68e9ea396fe36d6eebe84cce46d561e38697f",
+      "size_bytes": 20963376
+    },
+    {
+      "crc32": "1c63d31e",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 24).bin",
+      "md5": "4e68bd1ef9901eaf84509fbb923aeef2",
+      "sha1": "d001e3f18d173904d533f76727729ee154933fed",
+      "size_bytes": 32330592
+    },
+    {
+      "crc32": "7abdfd5a",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 25).bin",
+      "md5": "1a1fded668596ce37d8f659357bd88d8",
+      "sha1": "175c0a29db3240639ec7f6495cbce2dd9f28660f",
+      "size_bytes": 22783824
+    },
+    {
+      "crc32": "332f0f16",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 26).bin",
+      "md5": "9d1b6ecb05522db522e82acdf85ef947",
+      "sha1": "5e95adcd44d922db19d49dc63322e5d18d39f249",
+      "size_bytes": 21163296
+    },
+    {
+      "crc32": "a71495a8",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 27).bin",
+      "md5": "861d82e52472acfdc2d0957ac36cd336",
+      "sha1": "2edad93146c78fc5204c84d592ae623d1d80b964",
+      "size_bytes": 1321824
+    },
+    {
+      "crc32": "cb94faab",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA) (Track 28).bin",
+      "md5": "a123d2257c3b3ce18212e41cc81b3dd9",
+      "sha1": "a870389514c96bd5f786bc56080d5bbcd7a603b4",
+      "size_bytes": 22454544
+    },
+    {
+      "crc32": "d7d75667",
+      "filename": "MechWarrior 2 - 31st Century Combat (USA).img",
+      "md5": null,
+      "sha1": null,
+      "size_bytes": 762958224
+    }
+  ],
   "languages": [
     "en"
   ],
@@ -22,11 +235,11 @@
   ],
   "media": "CD",
   "redump_id": 99835,
-  "redump_url": "http://redump.org/disc/99835/",
+  "redump_url": "https://redump.info/disc/99835",
   "region": [
     "USA"
   ],
-  "schema_version": 2,
+  "schema_version": 3,
   "serials": [
     "CDM-3092-101-U3"
   ],
@@ -34,255 +247,199 @@
   "title": "MechWarrior 2: 31st Century Combat",
   "tracks": [
     {
-      "crc32": "272defe8",
-      "md5": "1267be089821cfb5922c4d027f892991",
+      "length": "13:31:24",
       "number": 1,
+      "pregap": "00:00:00",
       "sectors": 60849,
-      "sha1": "a885a11c44c54620d88bb8da94a58720216919a9",
-      "size_bytes": 143116848,
       "type": "data"
     },
     {
-      "crc32": "741c5854",
-      "md5": "4cd35c53e7f76e8478572a1946f1107e",
+      "length": "02:17:61",
       "number": 2,
+      "pregap": "00:01:74",
       "sectors": 10336,
-      "sha1": "5050acb9986eef861c595c91e1a487eae4079182",
-      "size_bytes": 24310272,
       "type": "audio"
     },
     {
-      "crc32": "ca818222",
-      "md5": "1c6d75a2eab483bd5990ad3f46c6d9bb",
+      "length": "02:23:03",
       "number": 3,
+      "pregap": "00:01:74",
       "sectors": 10728,
-      "sha1": "f47bd027605793f3c4a911a7354029024c072967",
-      "size_bytes": 25232256,
       "type": "audio"
     },
     {
-      "crc32": "aaab8789",
-      "md5": "dfc04e2edd42b3e85da5fde535e3dbc5",
+      "length": "01:55:02",
       "number": 4,
+      "pregap": "00:01:74",
       "sectors": 8627,
-      "sha1": "f6d377f7cded6b0bebdbd1360a1e948d356c23df",
-      "size_bytes": 20290704,
       "type": "audio"
     },
     {
-      "crc32": "60f76804",
-      "md5": "0e8936a176e667c6141fe35d6025c728",
+      "length": "01:43:41",
       "number": 5,
+      "pregap": "00:01:74",
       "sectors": 7766,
-      "sha1": "089a2553bf52b0cafee39a45d6087faa04347ca8",
-      "size_bytes": 18265632,
       "type": "audio"
     },
     {
-      "crc32": "a3cc81ae",
-      "md5": "5e0e4a4ecfd0d3701a3a5486a9537a21",
+      "length": "02:21:04",
       "number": 6,
+      "pregap": "00:01:74",
       "sectors": 10579,
-      "sha1": "a8f793fdf6fcd7410d7bffcb966b323baff44b9f",
-      "size_bytes": 24881808,
       "type": "audio"
     },
     {
-      "crc32": "76af3fe7",
-      "md5": "7f3140aecd649abf2c132f79b65e5938",
+      "length": "01:49:65",
       "number": 7,
+      "pregap": "00:01:74",
       "sectors": 8240,
-      "sha1": "5b246287912bd99a02354cf2d665db51c741c710",
-      "size_bytes": 19380480,
       "type": "audio"
     },
     {
-      "crc32": "096fc073",
-      "md5": "bb3654588a35afe9bd3bf12a81ddfe65",
+      "length": "02:14:12",
       "number": 8,
+      "pregap": "00:01:74",
       "sectors": 10062,
-      "sha1": "cc866f3996d4e21017e8ac8b7c33aa0469d7e749",
-      "size_bytes": 23665824,
       "type": "audio"
     },
     {
-      "crc32": "a48f2bd1",
-      "md5": "85ef28b54c4469e5d009476d63ddcf79",
+      "length": "01:45:01",
       "number": 9,
+      "pregap": "00:01:74",
       "sectors": 7876,
-      "sha1": "c5c74555ea07e29d54b94690726b747a51519585",
-      "size_bytes": 18524352,
       "type": "audio"
     },
     {
-      "crc32": "2876b365",
-      "md5": "d05b85283a0c0adb334572309883cada",
+      "length": "02:16:33",
       "number": 10,
+      "pregap": "00:01:74",
       "sectors": 10233,
-      "sha1": "ccf612c3c752f462f4df1729f4f5df8ae60ccc4a",
-      "size_bytes": 24068016,
       "type": "audio"
     },
     {
-      "crc32": "83149cd3",
-      "md5": "b9cee21b98868397bb0499142483bcb2",
+      "length": "02:27:00",
       "number": 11,
+      "pregap": "00:01:74",
       "sectors": 11025,
-      "sha1": "232b558677a56cc362a53b988f8a32ce12e65aa1",
-      "size_bytes": 25930800,
       "type": "audio"
     },
     {
-      "crc32": "07fb8222",
-      "md5": "c2c6ee3406c5c07fdb03a04ee5e722cd",
+      "length": "02:15:38",
       "number": 12,
+      "pregap": "00:01:74",
       "sectors": 10163,
-      "sha1": "3e004de03676c4266e11556adfc0ea5e907f3a2d",
-      "size_bytes": 23903376,
       "type": "audio"
     },
     {
-      "crc32": "1282564c",
-      "md5": "dc0849715ce2c480fb594cbf60e7bf7a",
+      "length": "02:15:73",
       "number": 13,
+      "pregap": "00:01:74",
       "sectors": 10198,
-      "sha1": "ed97c2dcaa65dc88a90d9b8ea6bc768447729420",
-      "size_bytes": 23985696,
       "type": "audio"
     },
     {
-      "crc32": "65e3c105",
-      "md5": "70a608c42258e32d63820bbd873f4bd6",
+      "length": "02:27:53",
       "number": 14,
+      "pregap": "00:01:74",
       "sectors": 11078,
-      "sha1": "4e34f485dfc082dc7e3dc37826e545981b6debd5",
-      "size_bytes": 26055456,
       "type": "audio"
     },
     {
-      "crc32": "a0bc6617",
-      "md5": "23d7a458d341901a220dbcbb75bc5036",
+      "length": "02:19:65",
       "number": 15,
+      "pregap": "00:01:74",
       "sectors": 10490,
-      "sha1": "fba0d25e0fb26f094561fa4888d52bbb9f70ba4a",
-      "size_bytes": 24672480,
       "type": "audio"
     },
     {
-      "crc32": "2e6888ea",
-      "md5": "16dc0dd3eaf5087531ff9381579c6d09",
+      "length": "02:06:48",
       "number": 16,
+      "pregap": "00:01:74",
       "sectors": 9498,
-      "sha1": "0990f696a0ecb9ed006574771838713146dc984b",
-      "size_bytes": 22339296,
       "type": "audio"
     },
     {
-      "crc32": "01056ac1",
-      "md5": "92f10b01ad2805ffa2aaa681659fd487",
+      "length": "03:10:15",
       "number": 17,
+      "pregap": "00:01:74",
       "sectors": 14265,
-      "sha1": "c40a6eadd28bb0aff20340a112a519aad594cd45",
-      "size_bytes": 33551280,
       "type": "audio"
     },
     {
-      "crc32": "344f96dd",
-      "md5": "3e91c6c872e8bec94fb473d1685e9edf",
+      "length": "02:01:65",
       "number": 18,
+      "pregap": "00:01:74",
       "sectors": 9140,
-      "sha1": "99b6cae82dcaf6d19f3364f112e8bd95a6e881e3",
-      "size_bytes": 21497280,
       "type": "audio"
     },
     {
-      "crc32": "5a4f82c9",
-      "md5": "fe6d56d6cdf735a862c632ad7e587db6",
+      "length": "02:40:11",
       "number": 19,
+      "pregap": "00:01:74",
       "sectors": 12011,
-      "sha1": "b65d44b9b2e092bca6b9845d8677d6a216ac83ed",
-      "size_bytes": 28249872,
       "type": "audio"
     },
     {
-      "crc32": "78c64682",
-      "md5": "b5af54666baf007ae1c36853721fac03",
+      "length": "02:20:24",
       "number": 20,
+      "pregap": "00:01:74",
       "sectors": 10524,
-      "sha1": "60f31e1572d21e4de94031841140710b5db12dfb",
-      "size_bytes": 24752448,
       "type": "audio"
     },
     {
-      "crc32": "20435417",
-      "md5": "530ee65b77f979a71f515807621d3ce4",
+      "length": "02:09:15",
       "number": 21,
+      "pregap": "00:01:74",
       "sectors": 9690,
-      "sha1": "2c867ddd102a80680689ea5d38a17a9d9829ba31",
-      "size_bytes": 22790880,
       "type": "audio"
     },
     {
-      "crc32": "85c3ce79",
-      "md5": "038e04f050e326e751b4c757e7577e25",
+      "length": "02:07:31",
       "number": 22,
+      "pregap": "00:01:74",
       "sectors": 9556,
-      "sha1": "99a6a053550300f0cf0eb16506956dd751917d3b",
-      "size_bytes": 22475712,
       "type": "audio"
     },
     {
-      "crc32": "c0d422d7",
-      "md5": "4925af359168418614133d41fbaa720e",
+      "length": "01:58:63",
       "number": 23,
+      "pregap": "00:01:74",
       "sectors": 8913,
-      "sha1": "feb68e9ea396fe36d6eebe84cce46d561e38697f",
-      "size_bytes": 20963376,
       "type": "audio"
     },
     {
-      "crc32": "1c63d31e",
-      "md5": "4e68bd1ef9901eaf84509fbb923aeef2",
+      "length": "03:03:21",
       "number": 24,
+      "pregap": "00:01:74",
       "sectors": 13746,
-      "sha1": "d001e3f18d173904d533f76727729ee154933fed",
-      "size_bytes": 32330592,
       "type": "audio"
     },
     {
-      "crc32": "7abdfd5a",
-      "md5": "1a1fded668596ce37d8f659357bd88d8",
+      "length": "02:09:12",
       "number": 25,
+      "pregap": "00:01:74",
       "sectors": 9687,
-      "sha1": "175c0a29db3240639ec7f6495cbce2dd9f28660f",
-      "size_bytes": 22783824,
       "type": "audio"
     },
     {
-      "crc32": "332f0f16",
-      "md5": "9d1b6ecb05522db522e82acdf85ef947",
+      "length": "01:59:73",
       "number": 26,
+      "pregap": "00:01:74",
       "sectors": 8998,
-      "sha1": "5e95adcd44d922db19d49dc63322e5d18d39f249",
-      "size_bytes": 21163296,
       "type": "audio"
     },
     {
-      "crc32": "a71495a8",
-      "md5": "861d82e52472acfdc2d0957ac36cd336",
+      "length": "00:07:37",
       "number": 27,
+      "pregap": "00:01:74",
       "sectors": 562,
-      "sha1": "2edad93146c78fc5204c84d592ae623d1d80b964",
-      "size_bytes": 1321824,
       "type": "audio"
     },
     {
-      "crc32": "cb94faab",
-      "md5": "a123d2257c3b3ce18212e41cc81b3dd9",
+      "length": "02:07:22",
       "number": 28,
+      "pregap": "00:01:74",
       "sectors": 9547,
-      "sha1": "a870389514c96bd5f786bc56080d5bbcd7a603b4",
-      "size_bytes": 22454544,
       "type": "audio"
     }
   ]

@@ -14,6 +14,7 @@ import pytest
 
 from ode_lookup_db.parser import (
     ParseError,
+    _extract_volume_label,
     extract_disc_ids_from_system_page,
     parse_disc_page,
 )
@@ -92,51 +93,40 @@ def test_volume_label_absent(redump_id: int, system: str):
     assert (row.get("pvd") or {}).get("volume_identifier") is None
 
 
-def test_catalog_all_zero_placeholder_is_none():
-    # 27832 carries "CATALOG 0000000000000" — a placeholder, not a real catalog.
-    row = _parse(27832, "pc")
-    assert row.get("catalog") is None
-
-
-def test_catalog_real_value_parses():
-    html = """
-    <html><body><div id="main"><h1>Synthetic</h1>
-      <table class="gamecomments">
-        <tr><th>Metadata</th></tr>
-        <tr><td>CATALOG 1234567890123</td></tr>
-      </table>
-      <table class="tracks">
-        <tr><th>#</th><th>Type</th><th>Pregap</th><th>Length</th><th>Sectors</th>
-            <th>Size</th><th>CRC-32</th><th>MD5</th><th>SHA-1</th></tr>
-        <tr><td>1</td><td>Data/Mode 1</td><td>00:00:00</td><td>10:00:00</td>
-            <td>1000</td><td>2352000</td><td>deadbeef</td>
-            <td>%s</td><td>%s</td></tr>
-      </table>
-    </div></body></html>
-    """ % ("a" * 32, "b" * 40)
-    row = parse_disc_page(html, redump_id=1, system="pc")
-    assert row["catalog"] == "1234567890123"
-
-
 def test_volume_label_first_wins():
-    html = """
-    <html><body><div id="main"><h1>Synthetic</h1>
-      <table class="gamecomments">
-        <tr><th>Comments</th></tr>
-        <tr><td><b>Volume Label</b>: FIRST_LABEL<br />
-                <b>Volume Label</b>: SECOND_LABEL</td></tr>
-      </table>
-      <table class="tracks">
-        <tr><th>#</th><th>Type</th><th>Pregap</th><th>Length</th><th>Sectors</th>
-            <th>Size</th><th>CRC-32</th><th>MD5</th><th>SHA-1</th></tr>
-        <tr><td>1</td><td>Data/Mode 1</td><td>00:00:00</td><td>10:00:00</td>
-            <td>1000</td><td>2352000</td><td>deadbeef</td>
-            <td>%s</td><td>%s</td></tr>
-      </table>
-    </div></body></html>
-    """ % ("a" * 32, "b" * 40)
-    row = parse_disc_page(html, redump_id=1, system="pc")
-    assert row["pvd"]["volume_identifier"] == "FIRST_LABEL"
+    # redump.info renders comments as a pre-wrap paragraph; a repeated label or a
+    # second "<b>...</b>: ..." line on the next row must not bleed into the value.
+    html = (
+        '<p class="pre-wrap disc-comments">'
+        "<b>Volume Label</b>: FIRST_LABEL\n"
+        "<b>Volume Label</b>: SECOND_LABEL</p>"
+    )
+    assert _extract_volume_label(html) == "FIRST_LABEL"
+
+
+def test_volume_label_stops_at_newline():
+    html = '<p class="disc-comments"><b>Volume Label</b>: MYST_UK\nCover variant notes</p>'
+    assert _extract_volume_label(html) == "MYST_UK"
+
+
+def test_files_populated_with_hashes():
+    # 133379 lists a .cue plus the .bin/.img; hashes now live on files.
+    row = _parse(133379, "pc")
+    assert len(row["files"]) >= 2
+    binfile = next(f for f in row["files"] if f["filename"].lower().endswith(".bin"))
+    assert binfile["md5"] and binfile["sha1"]
+    # cuesheet_sha1 is lifted from the .cue file
+    assert row["cuesheet_sha1"] == next(
+        f["sha1"] for f in row["files"] if f["filename"].lower().endswith(".cue")
+    )
+
+
+def test_dvd_has_no_tracks_but_has_file():
+    # 92225 is a DVD-9: no track table, a single .iso file, and a layerbreak.
+    row = _parse(92225, "pc")
+    assert row["tracks"] == []
+    assert len(row["files"]) == 1
+    assert row["disc_structure"]["layer_break"] == 2008656
 
 
 def test_track_sectors_captured():

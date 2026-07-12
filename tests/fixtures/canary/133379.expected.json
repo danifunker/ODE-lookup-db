@@ -1,7 +1,9 @@
 {
   "barcode": "5 390102 438487",
   "category": "Games",
-  "date_added": "2026-05-13 10:11",
+  "cuesheet_sha1": "9675c0cd35945a1e50224cb17db53e8b01eb5413",
+  "date_added": "2026-05-13 05:11 UTC",
+  "date_last_modified": "2026-05-13 05:11 UTC",
   "disc_structure": {
     "ifpi": "IFPI LG01",
     "layer_break": null,
@@ -14,6 +16,29 @@
     "emuLOAD"
   ],
   "edition": "SoftKey",
+  "files": [
+    {
+      "crc32": "b19fdd9b",
+      "filename": "Myst (UK) (Rerelease).cue",
+      "md5": "f9c8226c7c4f438677c7263a76f04f47",
+      "sha1": "9675c0cd35945a1e50224cb17db53e8b01eb5413",
+      "size_bytes": 87
+    },
+    {
+      "crc32": "9c5bfbb9",
+      "filename": "Myst (UK) (Rerelease).bin",
+      "md5": "ba9514dc544f089d0f23cb5756b8097d",
+      "sha1": "0e8fdf2af55e0bb1ddf0f674eebd9115a10f4793",
+      "size_bytes": 734202672
+    },
+    {
+      "crc32": "9c5bfbb9",
+      "filename": "Myst (UK) (Rerelease).img",
+      "md5": null,
+      "sha1": null,
+      "size_bytes": 734202672
+    }
+  ],
   "languages": [
     "en"
   ],
@@ -30,24 +55,22 @@
     "volume_identifier": "MYST_UK"
   },
   "redump_id": 133379,
-  "redump_url": "http://redump.org/disc/133379/",
+  "redump_url": "https://redump.info/disc/133379",
   "region": [
     "UK"
   ],
-  "schema_version": 2,
+  "schema_version": 3,
   "serials": [
     "SKM844AB-CD"
   ],
   "system": "pc",
-  "title": "Myst",
+  "title": "Myst (Rerelease)",
   "tracks": [
     {
-      "crc32": "9c5bfbb9",
-      "md5": "ba9514dc544f089d0f23cb5756b8097d",
+      "length": "69:22:11",
       "number": 1,
+      "pregap": "00:00:00",
       "sectors": 312161,
-      "sha1": "0e8fdf2af55e0bb1ddf0f674eebd9115a10f4793",
-      "size_bytes": 734202672,
       "type": "data"
     }
   ],

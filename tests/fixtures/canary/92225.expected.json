@@ -1,8 +1,8 @@
 {
   "barcode": "5 030917 121371",
   "category": "Games",
-  "date_added": "2022-04-18 17:47",
-  "date_last_modified": "2022-06-26 08:21",
+  "date_added": "2022-04-18 12:47 UTC",
+  "date_last_modified": "2022-06-26 03:21 UTC",
   "disc_structure": {
     "ifpi": "IFPI L641",
     "layer_break": 2008656,
@@ -15,6 +15,15 @@
     "Bigmanjapan"
   ],
   "edition": "Original",
+  "files": [
+    {
+      "crc32": "b53f6b2b",
+      "filename": "007 Legends (Russia) (En,Fr,De,Ru).iso",
+      "md5": "48f07edef1bd56c0f5b2f3bc60b82b83",
+      "sha1": "4d5b47a4d509ba2508f491794b4bef14b6279762",
+      "size_bytes": 8227422208
+    }
+  ],
   "languages": [
     "en",
     "fr",
@@ -37,25 +46,15 @@
     "volume_identifier": "007LEGENDS"
   },
   "redump_id": 92225,
-  "redump_url": "http://redump.org/disc/92225/",
+  "redump_url": "https://redump.info/disc/92225",
   "region": [
     "Russia"
   ],
-  "schema_version": 2,
+  "schema_version": 3,
   "serials": [
     "33409101RU"
   ],
   "system": "pc",
   "title": "007 Legends",
-  "tracks": [
-    {
-      "crc32": "b53f6b2b",
-      "md5": "48f07edef1bd56c0f5b2f3bc60b82b83",
-      "number": 1,
-      "sectors": 4017296,
-      "sha1": "4d5b47a4d509ba2508f491794b4bef14b6279762",
-      "size_bytes": 8227422208,
-      "type": "data"
-    }
-  ]
+  "tracks": []
 }

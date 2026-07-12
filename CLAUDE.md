@@ -2,20 +2,22 @@
 
 This repo is the **source of truth for the ODE lookup database**. It ships a unified SQLite (`data/ode-lookup.sqlite`) built from multiple per-source JSONLs:
 
-- `data/redump.jsonl` — redump.org disc metadata (tables `redump_*`)
+- `data/redump.jsonl` — **redump.info** disc metadata (tables `redump_*`)
 - `winworld/data/winworld.jsonl` — winworldpc.com archive metadata (tables `winworld_*`)
+
+**Source site (2026-07):** migrated from the retired `redump.org` to **`redump.info`** (relaunched mid-2026). Disc IDs are identical/stable across both sites, so the migration is a parser + config change, **not** a re-key. Disc pages live at `https://redump.info/disc/<id>` (no trailing slash); discovery walks `https://redump.info/discs?sort=added&order=desc&page=N`; per-system filter is `?system=PC|MAC`. The new HTML is a full rewrite (Pico/htmx), so the redump parser was rewritten for schema **v3** — see decision #7.
 
 Consumed primarily by `ODE-artwork-downloader`. See `MIGRATION-unified-db.md` for the consumer migration notes (table renames + new file name).
 
 ## Resolved design decisions (do not relitigate)
 
 1. **SQLite is release-only.** `data/ode-lookup.sqlite` is built from the per-source JSONLs during the workflow and attached to a GitHub Release (`db-YYYY-MM-DD` plus a moving `latest` tag). It is **not** committed; `.gitignore` excludes it.
-2. **No scheduled full refresh.** The daily cron only discovers and fetches *new* disc IDs. Updates to existing rows happen via user-filed GitHub issues with the `disc-recheck` label (template in `.github/ISSUE_TEMPLATE/disc-recheck.yml`).
+2. **No *recurring* scheduled full refresh.** The daily cron only discovers and fetches *new* disc IDs. Updates to existing rows happen via user-filed GitHub issues with the `disc-recheck` label (template in `.github/ISSUE_TEMPLATE/disc-recheck.yml`). **Exception (one-time):** the redump.info/schema-v3 migration required a single full re-scrape of every existing row via `uv run scripts/scrape.py --backfill-all` (resumable; skips rows already at the current schema version). During backfill, an id that now 404s on redump.info (renumbered/deleted upstream) is **dropped** from the JSONL rather than left as a version-mismatched tombstone — the validator's row-count shrink warning (decision #5) surfaces the net removals. A parity audit (HEAD every known id) found only a tiny fraction gone. This is a one-off, not a new recurring policy — daily stays new-IDs-only afterward.
 3. **Recheck rate limit: 30 per UTC day** (env var `MAX_RECHECKS_PER_DAY`). Overflow issues get a queued comment, not a manual approval gate. The user explicitly does not want approval friction.
 4. **No `page_sha256` field.** Without scheduled refreshes there is nothing to compare against.
 5. **Row-count shrink is a soft warning, not a hard failure.** Legitimate upstream deletions are expected to be rare; we log an issue but still commit.
 6. **Dedup on `redump_id` only.** Each disc has exactly one canonical redump_id and appears in exactly one system bucket (`pc` or `mac`). There is no separate "hybrid" listing on redump — that was a mistake in the original brief.
-7. **Schema versioning is per-source.** Each source row in `meta` carries its own `schema_version` (redump=2, winworld=1). Adding optional fields is fine; renames/removals require a new major version for that source. `meta` shape: `(source TEXT PK, schema_version, built_at, source_commit, row_count)`.
+7. **Schema versioning is per-source.** Each source row in `meta` carries its own `schema_version` (**redump=3**, winworld=1). Adding optional fields is fine; renames/removals require a new major version for that source. `meta` shape: `(source TEXT PK, schema_version, built_at, source_commit, row_count)`. **redump v3 (breaking, redump.info):** redump.info splits tracks and files into separate tables, so the row shape follows suit — `tracks[]` now carries physical layout only (`number, type, pregap, length, sectors`, and is **empty for DVDs**), and per-file hashes move to a new required `files[]` array (`filename, size_bytes, crc32, md5, sha1`). SQLite gains a `redump_file` table (hash indexes moved off `redump_track`); `cuesheet_sha1` is now populated from the `.cue` file. `catalog` is no longer extracted (redump.info doesn't expose it cleanly) — the column/field remain but go null on re-scrape.
 8. **DB is optical-only.** This database powers Optical Disc Emulator (ODE) lookups, so the WinWorld build step filters `winworld_download` to `media_kind IN ('CD','DVD')` and skips any release/product with no optical downloads. The JSONL source-of-truth keeps **everything** (floppies, tapes, archives, manuals, VM images) so we can revisit this without re-scraping. The filter lives in `WINWORLD_OPTICAL_MEDIA` in `src/ode_lookup_db/db.py`.
 8. **Languages**: store both ISO 639-1 code (`languages`) and the raw redump string (`languages_raw`). Unmapped → `"zz"`, with a log warning so we can extend `LANGUAGE_MAP` in `src/ode_lookup_db/languages.py`.
 9. **User-Agent**: `ODE-lookup-db/1.0 (+https://github.com/danifunker/ODE-lookup-db)`. Owner is `danifunker`.
@@ -70,7 +72,7 @@ winworld/                        # winworldpc.com subtree
 | 44803  | pc  | MechWarrior 2 (PC EU) — multi-dumper, zero-date PVD |
 | 27832  | pc  | Super Street Fighter II Turbo — 45 tracks, no Serial, has Version |
 | 16345  | pc  | American McGee's Alice — 5 languages, multi-ring, HTML in Comments |
-| 92225  | pc  | 007 Legends — DVD-9, 6-column track table, has Layerbreak |
+| 92225  | pc  | 007 Legends — DVD-9, **no track table** (single `.iso` in files[]), has Layerbreak |
 
 ## Resumable bulk scrape
 
@@ -82,7 +84,7 @@ ETA + parsed/failed counters log every 50 fetches.
 
 ## Media field & DVDs
 
-The schema includes an optional `media` field (e.g. "CD", "DVD-9"). DVDs are **kept**, not filtered — consumers can `WHERE media LIKE 'CD%'` to get CD-only. DVD track tables have 6 columns (no Type/Pregap/Length) instead of CD's 9; the parser is header-driven and handles both.
+The schema includes an optional `media` field (e.g. "CD", "DVD-9"). DVDs are **kept**, not filtered — consumers can `WHERE media LIKE 'CD%'` to get CD-only. On redump.info a CD page has a tracks table (`# / Type / Pregap / Length / Sectors`) plus a files table; a **DVD page has no tracks table at all** — just the single `.iso` row in the files table — so `tracks[]` is empty and the image's hashes come from `files[]`. Both the tracks and files parsers are header-driven.
 
 ## How to run locally (macOS)
 
@@ -93,6 +95,7 @@ uv run pytest -q
 
 # redump pipeline
 uv run scripts/scrape.py --limit 5 --systems pc   # seed test
+uv run scripts/scrape.py --backfill-all           # one-time redump.info v3 re-scrape (resumable)
 uv run scripts/validate.py
 
 # winworld pipeline (heavy data goes to NAS via WINWORLD_DATA_DIR)

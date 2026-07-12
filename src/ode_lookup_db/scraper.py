@@ -19,10 +19,11 @@ from .parser import (
 
 log = logging.getLogger(__name__)
 
-# Redump system slugs we scrape. Keep this list authoritative and short.
+# redump.info system slugs (the ?system= query value) we scrape, keyed by our
+# bucket. Keep this list authoritative and short.
 SYSTEM_SLUGS: dict[str, str] = {
-    "pc": "pc",
-    "mac": "mac",
+    "pc": "PC",
+    "mac": "MAC",
 }
 
 # Map raw System-column labels on the added-desc listing to our system slugs.
@@ -40,7 +41,7 @@ def discover_recent_added(
     max_pages: int = 50,
     overlap_pages: int = 1,
 ) -> tuple[list[tuple[int, str]], int | None]:
-    """Walk /discs/sort/added/dir/desc/ newest-first; return (new_targets, new_checkpoint_id).
+    """Walk /discs?sort=added&order=desc newest-first; return (new_targets, new_checkpoint_id).
 
     `new_targets` are (redump_id, system) tuples for in-scope systems only.
     `new_checkpoint_id` is the topmost disc id on page 1 (across all systems) —

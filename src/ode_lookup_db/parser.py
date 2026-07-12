@@ -1,22 +1,29 @@
-"""Parse a redump.org disc page into a schema-conformant dict.
+"""Parse a redump.info disc page into a schema-conformant dict.
 
-Structural patterns (as of 2026-05):
-  - <h1> holds the disc title.
-  - table.gameinfo:  rows of <th>label</th><td>value</td>
-  - table.dumpinfo:  one row, "Dumpers" -> <a> links
-  - table.gamecomments: alternating <th>label</th> and <td>value</td> rows.
-                     Labels seen: Metadata, Barcode, Comments, Protection, Contents
-  - table.tracks:    data rows of [#, Type, Pregap, Length, Sectors, Size, CRC-32, MD5, SHA-1]
-                     plus a "Total" summary row (skip).
-  - table.rings:     mastering / SID / mould codes per ring.
-  - table.pvd:       Creation / Modification / Expiration / Effective dates.
-                     All-zero (0000-00-00) rows are absent.
+Structural patterns (redump.info, as of 2026-07):
+  - `.disc-title-box h2` holds the disc title.
+  - table.disc-info-table: rows of <th>label</th><td>value</td>. Labels seen:
+    System, Media, Category, Region, Language(s), Disc Serial, Edition,
+    Barcode, Version, Layerbreak, Errors. Region/Language render as
+    <img title="..."> flag icons.
+  - .dump-info-section table: Status, Added, Modified, Dumper(s).
+  - section.section-collapsible / p.disc-comments: free-form comments; carries
+    "<b>Volume Label</b>: XXX", protection notes, etc.
+  - table.tracks-table:  [#, Type, Pregap, Length, Sectors]. Metadata only —
+    per-file hashes live in the separate files table. DVDs have no tracks table.
+  - table.files-table:   [Filename, Size, CRC-32, MD5, SHA-1].
+  - table.ring-table:    [#, layer, Mastering Code, Mastering SID, Mould SIDs, ...].
+  - table.binary-table:  PVD — rows of [label, Contents(hex), Date, Time, GMT].
+                         All-zero (0000-00-00) rows are absent/placeholder.
+
+Note the schema change from the old redump.org parser (schema v2 -> v3): tracks
+carry only physical layout (no hashes), and hashes move to a first-class
+`files` array. See schema/disc.schema.json and MIGRATION-unified-db.md.
 """
 
 from __future__ import annotations
 
 import datetime as dt
-import html
 import logging
 import re
 from typing import Any
@@ -28,14 +35,12 @@ from .languages import to_iso_code
 
 log = logging.getLogger(__name__)
 
-DISC_URL_RE = re.compile(r"https?://redump\.org/disc/(\d+)/?")
-# Volume label in the Comments cell: "<b>Volume Label</b>: MYST_UK". The cell
-# may carry several "<b>label</b>: value" lines separated by <br>; first wins.
-VOLUME_LABEL_RE = re.compile(r"<b>\s*Volume Label\s*</b>\s*:\s*([^<]+)", re.IGNORECASE)
-# Metadata cell: "CATALOG 0000000000000". All-zero values are placeholders.
-CATALOG_RE = re.compile(r"^CATALOG\s+(.+)$", re.IGNORECASE)
-# An absent PVD date renders as "0000-00-00" OR as nbsp-padded dashes
-# (e.g. "    -  -  " after entity-decoding and whitespace-stripping).
+DISC_URL_RE = re.compile(r"https?://redump\.(?:info|org)/disc/(\d+)/?")
+# Volume label in a comments paragraph: "<b>Volume Label</b>: MYST_UK". The
+# paragraph may carry several "label: value" lines; stop at the first newline or
+# tag so we capture just this value, and take the first Volume Label if repeated.
+VOLUME_LABEL_RE = re.compile(r"<b>\s*Volume Label\s*</b>\s*:\s*([^<\n]+)", re.IGNORECASE)
+# An absent PVD date renders as "0000-00-00".
 ABSENT_DATE_RE = re.compile(r"^(?:0{4}-0{2}-0{2}|[\s\-]*)$")
 
 TRACK_TYPE_MAP = {
@@ -54,44 +59,52 @@ class ParseError(ValueError):
 def parse_disc_page(html: str, redump_id: int, system: str) -> dict[str, Any]:
     """Parse one disc page. Returns a dict matching disc.schema.json.
 
-    The caller supplies `system` because the disc page itself doesn't always
-    cleanly identify its system bucket — the system page that linked here does.
+    The caller supplies `system` because the disc page itself identifies its
+    system by long label (e.g. "IBM PC compatible") rather than our bucket slug;
+    the listing that linked here is the authoritative source of the bucket.
     """
     if system not in ALLOWED_SYSTEMS:
         raise ParseError(f"system {system!r} not in allowlist {ALLOWED_SYSTEMS}")
 
     tree = HTMLParser(html)
 
-    gameinfo = _parse_label_table(tree, "table.gameinfo")
-    comments = _parse_gamecomments(tree)
-    gc = _extract_gamecomments(comments)
+    disc_info = _parse_label_table(tree, "table.disc-info-table")
+    dump_info = _parse_dump_info(tree)
+
+    files = _extract_files(tree)
+    if not files:
+        raise ParseError("no files table / no files on disc page")
+
+    layer_break = _parse_int(_text(disc_info.get("Layerbreak")))
 
     row: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "redump_id": redump_id,
         "system": system,
         "title": _extract_title(tree),
-        "redump_url": f"http://redump.org/disc/{redump_id}/",
+        "redump_url": f"https://redump.info/disc/{redump_id}",
         "scraped_at": dt.datetime.now(dt.UTC).isoformat(),
         "tracks": _extract_tracks(tree),
+        "files": files,
     }
 
-    layer_break = _parse_int(_text(gameinfo.get("Layerbreak")))
     optional = {
-        "region": _extract_imgs_titles(gameinfo.get("Region")),
-        "languages_raw": _extract_imgs_titles(gameinfo.get("Languages")),
-        "edition": _text(gameinfo.get("Edition")),
-        "version": _text(gameinfo.get("Version")),
-        "serials": _extract_serials(gameinfo),
-        "barcode": _normalize_barcode(comments.get("Barcode")),
-        "category": _text(gameinfo.get("Category")),
-        "media": _text(gameinfo.get("Media")),
-        "catalog": gc["catalog"],
-        "pvd": _extract_pvd(tree, volume_identifier=gc["volume_identifier"]),
+        "region": _extract_imgs_titles(disc_info.get("Region")),
+        "languages_raw": _extract_imgs_titles(
+            disc_info.get("Languages") or disc_info.get("Language")
+        ),
+        "edition": _text(disc_info.get("Edition")),
+        "version": _text(disc_info.get("Version")),
+        "serials": _extract_serials(disc_info),
+        "barcode": _text(disc_info.get("Barcode")),
+        "category": _text(disc_info.get("Category")),
+        "media": _text(disc_info.get("Media")),
+        "pvd": _extract_pvd(tree, volume_identifier=_extract_volume_label(html)),
         "disc_structure": _extract_disc_structure(tree, layer_break=layer_break),
-        "dumpers": _extract_dumpers(tree),
-        "date_added": _text(gameinfo.get("Added")),
-        "date_last_modified": _text(gameinfo.get("Last modified")),
+        "dumpers": _extract_dumpers(dump_info),
+        "date_added": dump_info.get("Added"),
+        "date_last_modified": dump_info.get("Modified"),
+        "cuesheet_sha1": _extract_cuesheet_sha1(files),
     }
     for field, value in optional.items():
         if value not in (None, "", [], {}):
@@ -104,7 +117,7 @@ def parse_disc_page(html: str, redump_id: int, system: str) -> dict[str, Any]:
 
 
 def extract_disc_ids_from_system_page(html: str) -> list[int]:
-    """Return all redump disc IDs linked from a system listing page, in document order."""
+    """Return all redump disc IDs linked from a listing page, in document order."""
     tree = HTMLParser(html)
     ids: list[int] = []
     seen: set[int] = set()
@@ -120,9 +133,10 @@ def extract_disc_ids_from_system_page(html: str) -> list[int]:
 
 
 def extract_rows_from_added_desc_page(html: str) -> list[tuple[int, str]]:
-    """Return [(redump_id, system_label), ...] from /discs/sort/added/dir/desc/, newest-first.
+    """Return [(redump_id, system_label), ...] from the added-desc listing, newest-first.
 
-    `system_label` is the raw uppercase text from the System column (e.g. "PC", "MAC").
+    On redump.info the listing lives at /discs?sort=added&order=desc&page=N and
+    its table has a System column carrying the short slug text (e.g. "PC", "MAC").
     Caller is responsible for filtering to in-scope systems.
     """
     tree = HTMLParser(html)
@@ -140,11 +154,11 @@ def extract_rows_from_added_desc_page(html: str) -> list[tuple[int, str]]:
             tds = tr.css("td")
             if len(tds) <= sys_idx:
                 continue
-            a = tr.css_first("a")
+            a = tr.css_first("a[href^='/disc/']") or tr.css_first("a")
             if not a:
                 continue
             href = a.attributes.get("href") or ""
-            m = re.match(r"^/disc/(\d+)/?$", href)
+            m = re.match(r"^/disc/(\d+)/?$", href) or DISC_URL_RE.search(href)
             if not m:
                 continue
             rid = int(m.group(1))
@@ -168,128 +182,105 @@ def _text(node: Node | None) -> str | None:
     return text or None
 
 
+def _row_cells(tr: Node) -> list[Node]:
+    """Return a two-column row's [label_cell, value_cell], else [].
+
+    redump.info renders these tables as two <td>s per row with the label bolded
+    in the first (`<td><strong>System</strong></td><td>...</td>`); older markup
+    used <th>/<td>. Accept either.
+    """
+    cells = tr.css("th, td")
+    return cells if len(cells) == 2 else []
+
+
 def _parse_label_table(tree: HTMLParser, selector: str) -> dict[str, Node]:
-    """For tables of <tr><th>label</th><td>value</td></tr>, return {label: td_node}."""
+    """For two-column label/value tables, return {label: value_node}."""
     out: dict[str, Node] = {}
     table = tree.css_first(selector)
     if table is None:
         return out
     for tr in table.css("tr"):
-        ths = tr.css("th")
-        tds = tr.css("td")
-        if len(ths) == 1 and len(tds) == 1:
-            label = ths[0].text(strip=True)
-            if label:
-                out[label] = tds[0]
+        cells = _row_cells(tr)
+        if not cells:
+            continue
+        label = cells[0].text(strip=True)
+        if label and label not in out:
+            out[label] = cells[1]
     return out
 
 
-def _parse_gamecomments(tree: HTMLParser) -> dict[str, Node]:
-    """Game-comments table uses alternating th-only and td-only rows."""
-    out: dict[str, Node] = {}
-    table = tree.css_first("table.gamecomments")
+def _parse_dump_info(tree: HTMLParser) -> dict[str, str]:
+    """Return {label: value_text} for the dump-info section (Status/Added/Modified/Dumper(s))."""
+    out: dict[str, str] = {}
+    table = tree.css_first(".dump-info-section table")
     if table is None:
         return out
-    current_label: str | None = None
     for tr in table.css("tr"):
-        ths = tr.css("th")
-        tds = tr.css("td")
-        if ths and not tds:
-            current_label = ths[0].text(strip=True) or None
-        elif tds and current_label is not None:
-            if current_label not in out:
-                out[current_label] = tds[0]
+        cells = _row_cells(tr)
+        if not cells:
+            continue
+        label = cells[0].text(strip=True)
+        value = cells[1].text(strip=True)
+        if label and label not in out:
+            out[label] = value
     return out
 
 
-def _extract_gamecomments(comments: dict[str, Node]) -> dict[str, str | None]:
-    """Pull the two consumer-relevant fields out of the gamecomments table.
-
-    `volume_identifier` comes from the free-form Comments cell; `catalog` from
-    the Metadata cell. Both fall back to None when absent.
-    """
-    return {
-        "volume_identifier": _extract_volume_label(comments.get("Comments")),
-        "catalog": _extract_catalog(comments.get("Metadata")),
-    }
-
-
-def _extract_volume_label(cell: Node | None) -> str | None:
-    if cell is None:
-        return None
-    m = VOLUME_LABEL_RE.search(cell.html or "")
-    if m is None:
-        return None
-    value = html.unescape(m.group(1)).strip()
-    return value or None
-
-
-def _extract_catalog(cell: Node | None) -> str | None:
-    if cell is None:
-        return None
-    text = cell.text(strip=True)
-    if not text:
-        return None
-    m = CATALOG_RE.match(text)
+def _extract_volume_label(html: str) -> str | None:
+    m = VOLUME_LABEL_RE.search(html)
     if m is None:
         return None
     value = m.group(1).strip()
-    if not value or set(value) == {"0"}:  # all-zero placeholder → no catalog
-        return None
-    return value
+    return value or None
 
 
 def _extract_imgs_titles(cell: Node | None) -> list[str]:
-    """For a cell containing <img title="X" /> tags, return the titles in order."""
+    """For a cell containing <img title="X" /> flag tags, return the titles in order."""
     if cell is None:
         return []
-    return [img.attributes.get("title", "") for img in cell.css("img") if img.attributes.get("title")]
+    return [
+        img.attributes.get("title", "")
+        for img in cell.css("img")
+        if img.attributes.get("title")
+    ]
 
 
 def _extract_title(tree: HTMLParser) -> str:
-    node = tree.css_first("#main h1")
+    node = tree.css_first(".disc-title-box h2") or tree.css_first(".disc-view h2")
     title = _text(node)
     if not title:
         raise ParseError("title not found on disc page")
     return title
 
 
-def _extract_serials(gameinfo: dict[str, Node]) -> list[str]:
-    cell = gameinfo.get("Serial")
+def _extract_serials(disc_info: dict[str, Node]) -> list[str]:
+    cell = disc_info.get("Disc Serial") or disc_info.get("Serial")
     if cell is None:
         return []
     raw = cell.text(strip=True)
     if not raw:
         return []
-    # Redump occasionally lists multiple serials comma-separated.
+    # redump occasionally lists multiple serials comma-separated.
     return [s.strip() for s in raw.split(",") if s.strip()]
 
 
-def _normalize_barcode(cell: Node | None) -> str | None:
-    if cell is None:
-        return None
-    text = cell.text(strip=True)
-    return text or None
-
-
-def _extract_dumpers(tree: HTMLParser) -> list[str]:
-    table = tree.css_first("table.dumpinfo")
-    if table is None:
+def _extract_dumpers(dump_info: dict[str, str]) -> list[str]:
+    raw = dump_info.get("Dumpers") or dump_info.get("Dumper")
+    if not raw:
         return []
-    return [a.text(strip=True) for a in table.css("a") if a.text(strip=True)]
+    return [d.strip() for d in raw.split(",") if d.strip()]
 
 
 def _extract_tracks(tree: HTMLParser) -> list[dict[str, Any]]:
-    """Header-driven track parsing.
+    """Header-driven track parsing: [#, Type, Pregap, Length, Sectors].
 
-    CD layout (9 cols):  # | Type | Pregap | Length | Sectors | Size | CRC-32 | MD5 | SHA-1
-    DVD layout (6 cols): # | Sectors | Size | CRC-32 | MD5 | SHA-1   (no Type — implicit data)
+    Returns [] for media with no track table (e.g. DVDs, whose single image is
+    described only by the files table).
     """
-    table = tree.css_first("table.tracks")
+    table = tree.css_first("table.tracks-table")
     if table is None:
-        raise ParseError("no tracks table on disc page")
+        return []
 
-    # Find the header row (all <th>, no <td>) inside the tracks table.
     headers: list[str] = []
     for tr in table.css("tr"):
         ths = tr.css("th")
@@ -299,7 +290,7 @@ def _extract_tracks(tree: HTMLParser) -> list[dict[str, Any]]:
                 headers = candidate
                 break
     if not headers:
-        raise ParseError("tracks table missing header row")
+        return []
 
     def col(name: str) -> int | None:
         try:
@@ -307,50 +298,103 @@ def _extract_tracks(tree: HTMLParser) -> list[dict[str, Any]]:
         except ValueError:
             return None
 
-    i_num, i_type = col("#"), col("Type")
+    i_num = col("#")
+    i_type = col("Type")
+    i_pregap = col("Pregap")
+    i_length = col("Length")
     i_sectors = col("Sectors")
-    i_size, i_crc = col("Size"), col("CRC-32")
-    i_md5, i_sha1 = col("MD5"), col("SHA-1")
-    if i_num is None or i_size is None or i_crc is None:
-        raise ParseError(f"unexpected tracks table headers: {headers}")
+    if i_num is None:
+        return []
+
+    def cell(tds: list[Node], i: int | None) -> str | None:
+        if i is None or i >= len(tds):
+            return None
+        return tds[i].text(strip=True) or None
 
     tracks: list[dict[str, Any]] = []
     for tr in table.css("tr"):
         tds = tr.css("td")
-        if len(tds) < len(headers):
+        if not tds:
             continue
-        first = tds[i_num].text(strip=True)
-        if not first.isdigit():  # skips header and "Total" summary row
+        first = tds[i_num].text(strip=True) if i_num < len(tds) else ""
+        if not first.isdigit():  # skips header and the "Total" summary row
             continue
 
-        if i_type is not None:
-            type_raw = tds[i_type].text(strip=True)
-            track_type = TRACK_TYPE_MAP.get(type_raw)
-            if track_type is None:
-                log.warning("unknown track type %r — skipping track", type_raw)
-                continue
-        else:
-            track_type = "data"  # DVD/BD tables have no Type column
+        type_raw = cell(tds, i_type)
+        track_type = TRACK_TYPE_MAP.get(type_raw) if type_raw is not None else "data"
+        if track_type is None:
+            log.warning("unknown track type %r — skipping track", type_raw)
+            continue
 
-        size_bytes = _parse_int(tds[i_size].text(strip=True))
-        sectors = (
-            _parse_int(tds[i_sectors].text(strip=True))
-            if i_sectors is not None and i_sectors < len(tds)
-            else None
-        )
-        track: dict[str, Any] = {
+        tracks.append({
             "number": int(first),
             "type": track_type,
-            "sectors": sectors,
-            "size_bytes": size_bytes,
-            "crc32": _hex_or_none(tds[i_crc].text(strip=True), 8),
-            "md5": _hex_or_none(tds[i_md5].text(strip=True), 32) if i_md5 is not None else None,
-            "sha1": _hex_or_none(tds[i_sha1].text(strip=True), 40) if i_sha1 is not None else None,
-        }
-        tracks.append(track)
-    if not tracks:
-        raise ParseError("no tracks parsed from tracks table")
+            "pregap": cell(tds, i_pregap),
+            "length": cell(tds, i_length),
+            "sectors": _parse_int(cell(tds, i_sectors)),
+        })
     return tracks
+
+
+def _extract_files(tree: HTMLParser) -> list[dict[str, Any]]:
+    """Header-driven file parsing: [Filename, Size, CRC-32, MD5, SHA-1]."""
+    table = tree.css_first("table.files-table")
+    if table is None:
+        return []
+
+    headers: list[str] = []
+    for tr in table.css("tr"):
+        ths = tr.css("th")
+        if ths and not tr.css("td"):
+            candidate = [th.text(strip=True) for th in ths]
+            if "Filename" in candidate:
+                headers = candidate
+                break
+    if not headers:
+        return []
+
+    def col(name: str) -> int | None:
+        try:
+            return headers.index(name)
+        except ValueError:
+            return None
+
+    i_name = col("Filename")
+    i_size = col("Size")
+    i_crc = col("CRC-32")
+    i_md5 = col("MD5")
+    i_sha1 = col("SHA-1")
+    if i_name is None:
+        return []
+
+    def cell(tds: list[Node], i: int | None) -> str | None:
+        if i is None or i >= len(tds):
+            return None
+        return tds[i].text(strip=True) or None
+
+    files: list[dict[str, Any]] = []
+    for tr in table.css("tr"):
+        tds = tr.css("td")
+        if not tds or i_name >= len(tds):
+            continue
+        filename = tds[i_name].text(strip=True)
+        if not filename or filename == "Total":
+            continue
+        files.append({
+            "filename": filename,
+            "size_bytes": _parse_int(cell(tds, i_size)),
+            "crc32": _hex_or_none(cell(tds, i_crc) or "", 8),
+            "md5": _hex_or_none(cell(tds, i_md5) or "", 32),
+            "sha1": _hex_or_none(cell(tds, i_sha1) or "", 40),
+        })
+    return files
+
+
+def _extract_cuesheet_sha1(files: list[dict[str, Any]]) -> str | None:
+    for f in files:
+        if f["filename"].lower().endswith(".cue"):
+            return f.get("sha1")
+    return None
 
 
 def _parse_int(text: str | None) -> int | None:
@@ -380,7 +424,7 @@ def _extract_pvd(tree: HTMLParser, *, volume_identifier: str | None = None) -> d
         "expiration_date": None,
         "effective_date": None,
     }
-    table = tree.css_first("table.pvd")
+    table = tree.css_first("table.binary-table")
     if table is not None:
         label_to_field = {
             "Creation": "creation_date",
@@ -417,12 +461,12 @@ def _format_pvd_datetime(date_str: str, time_str: str, gmt_str: str) -> str | No
 
 
 def _extract_disc_structure(tree: HTMLParser, *, layer_break: int | None = None) -> dict[str, Any] | None:
-    table = tree.css_first("table.rings")
+    table = tree.css_first("table.ring-table")
     if table is None:
         if layer_break is None:
             return None
         return {"ring_mastering_codes": [], "mould_sid": None, "ifpi": None, "layer_break": layer_break}
-    # Locate header row to learn column order — varies by disc.
+
     header_row = None
     for tr in table.css("tr"):
         if tr.css("th") and not tr.css("td"):
@@ -438,9 +482,9 @@ def _extract_disc_structure(tree: HTMLParser, *, layer_break: int | None = None)
         except ValueError:
             return None
 
-    mastering_i = idx("Mastering Code (laser branded/etched)")
-    msid_i = idx("Mastering SID Code")
-    mould_i = idx("Mould SID Code")
+    mastering_i = idx("Mastering Code")
+    msid_i = idx("Mastering SID")
+    mould_i = idx("Mould SIDs")
 
     mastering_codes: list[str] = []
     mould_sid: str | None = None
@@ -457,10 +501,12 @@ def _extract_disc_structure(tree: HTMLParser, *, layer_break: int | None = None)
         def cell_text(i: int | None) -> str | None:
             if i is None or i >= len(tds):
                 return None
-            text = tds[i].text(strip=True)
+            # separator=' ' recovers spacing between per-segment spans that the
+            # site renders without whitespace (e.g. "SATURN""SKM844AB-CD").
+            text = tds[i].text(separator=" ", strip=True)
             if not text or text == "NULL":
                 return None
-            return re.sub(r"\s+", " ", text)
+            return re.sub(r"\s+", " ", text).strip()
 
         m = cell_text(mastering_i)
         if m:

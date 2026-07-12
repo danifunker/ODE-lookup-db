@@ -1,7 +1,7 @@
 """JSONL <-> SQLite I/O for the unified ODE lookup database.
 
 Source-of-truth files (per source, committed, plain text for diffs):
-  data/redump.jsonl                 — redump.org disc metadata
+  data/redump.jsonl                 — redump.info disc metadata
   winworld/data/winworld.jsonl      — winworldpc.com archive metadata
 
 Released artifact (rebuilt from JSONLs every run, not committed):
@@ -102,6 +102,7 @@ CREATE TABLE redump_disc (
     pvd_volume_id      TEXT,
     pvd_system_id      TEXT,
     pvd_creation_date  TEXT,
+    cuesheet_sha1      TEXT,
     date_added         TEXT,
     date_last_modified TEXT,
     redump_url         TEXT    NOT NULL
@@ -112,20 +113,33 @@ CREATE INDEX idx_redump_disc_pvd_volume_id ON redump_disc(pvd_volume_id) WHERE p
 CREATE INDEX idx_redump_disc_title_nocase  ON redump_disc(title COLLATE NOCASE);
 CREATE INDEX idx_redump_disc_system        ON redump_disc(system);
 
+-- Physical track layout (redump.info schema v3). Per-file hashes live in
+-- redump_file; a track row carries only geometry.
 CREATE TABLE redump_track (
     redump_id   INTEGER NOT NULL REFERENCES redump_disc(redump_id) ON DELETE CASCADE,
     number      INTEGER NOT NULL,
     kind        TEXT,
+    pregap      TEXT,
+    length      TEXT,
     sectors     INTEGER,
+    PRIMARY KEY (redump_id, number)
+) WITHOUT ROWID;
+
+-- Dumped files with their hashes: the .cue plus one file per track/image.
+CREATE TABLE redump_file (
+    redump_id   INTEGER NOT NULL REFERENCES redump_disc(redump_id) ON DELETE CASCADE,
+    seq         INTEGER NOT NULL,
+    filename    TEXT    NOT NULL,
     size_bytes  INTEGER,
     crc32       TEXT,
     md5         TEXT,
     sha1        TEXT,
-    PRIMARY KEY (redump_id, number)
+    PRIMARY KEY (redump_id, seq)
 ) WITHOUT ROWID;
-CREATE INDEX idx_redump_track_sha1  ON redump_track(sha1)  WHERE sha1  IS NOT NULL;
-CREATE INDEX idx_redump_track_md5   ON redump_track(md5)   WHERE md5   IS NOT NULL;
-CREATE INDEX idx_redump_track_crc32 ON redump_track(crc32) WHERE crc32 IS NOT NULL;
+CREATE INDEX idx_redump_file_sha1     ON redump_file(sha1)     WHERE sha1     IS NOT NULL;
+CREATE INDEX idx_redump_file_md5      ON redump_file(md5)      WHERE md5      IS NOT NULL;
+CREATE INDEX idx_redump_file_crc32    ON redump_file(crc32)    WHERE crc32    IS NOT NULL;
+CREATE INDEX idx_redump_file_filename ON redump_file(filename COLLATE NOCASE);
 
 CREATE TABLE redump_serial (
     redump_id INTEGER NOT NULL REFERENCES redump_disc(redump_id) ON DELETE CASCADE,
@@ -311,7 +325,7 @@ def _insert_redump(conn: sqlite3.Connection, rows: Iterable[dict[str, Any]]) -> 
     for row in rows:
         pvd = row.get("pvd") or {}
         conn.execute(
-            "INSERT INTO redump_disc VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO redump_disc VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 row["redump_id"],
                 row["system"],
@@ -326,6 +340,7 @@ def _insert_redump(conn: sqlite3.Connection, rows: Iterable[dict[str, Any]]) -> 
                 _nn(pvd.get("volume_identifier")),
                 _nn(pvd.get("system_identifier")),
                 _nn(pvd.get("creation_date")),
+                _lower_hex(_nn(row.get("cuesheet_sha1"))),
                 _nn(row.get("date_added")),
                 _nn(row.get("date_last_modified")),
                 row["redump_url"],
@@ -333,16 +348,27 @@ def _insert_redump(conn: sqlite3.Connection, rows: Iterable[dict[str, Any]]) -> 
         )
         for t in row.get("tracks") or []:
             conn.execute(
-                "INSERT INTO redump_track VALUES (?,?,?,?,?,?,?,?)",
+                "INSERT INTO redump_track VALUES (?,?,?,?,?,?)",
                 (
                     row["redump_id"],
                     t["number"],
                     _nn(t.get("type")),
+                    _nn(t.get("pregap")),
+                    _nn(t.get("length")),
                     t.get("sectors"),
-                    t.get("size_bytes"),
-                    _lower_hex(_nn(t.get("crc32"))),
-                    _lower_hex(_nn(t.get("md5"))),
-                    _lower_hex(_nn(t.get("sha1"))),
+                ),
+            )
+        for seq, f in enumerate(row.get("files") or []):
+            conn.execute(
+                "INSERT INTO redump_file VALUES (?,?,?,?,?,?,?)",
+                (
+                    row["redump_id"],
+                    seq,
+                    f.get("filename") or "",
+                    f.get("size_bytes"),
+                    _lower_hex(_nn(f.get("crc32"))),
+                    _lower_hex(_nn(f.get("md5"))),
+                    _lower_hex(_nn(f.get("sha1"))),
                 ),
             )
         for s in row.get("serials") or []:

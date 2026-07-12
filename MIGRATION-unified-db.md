@@ -4,6 +4,48 @@
 **Breaking for:** ODE-artwork-downloader and any other consumer that downloads
 `redump.sqlite` from a GitHub Release of this repo.
 
+---
+
+## ⚠️ redump schema v3 (redump.info migration, 2026-07) — BREAKING
+
+The redump source moved from the retired `redump.org` to `redump.info`. Disc IDs
+are unchanged, but redump.info separates **tracks** (physical layout) from
+**files** (hashes), and the row/table shape now follows that split. `meta` for
+source `redump` reports `schema_version = 3`.
+
+**What consumers must change:**
+
+1. **Hashes moved off `redump_track` → new `redump_file` table.** Hash lookups
+   that hit `redump_track.sha1/md5/crc32` must now query `redump_file`:
+
+   ```sql
+   -- before (v2):
+   SELECT redump_id FROM redump_track WHERE sha1 = ?;
+   -- after (v3):
+   SELECT redump_id FROM redump_file  WHERE sha1 = ?;
+   ```
+
+   `redump_file` columns: `(redump_id, seq, filename, size_bytes, crc32, md5, sha1)`,
+   indexed on `sha1`, `md5`, `crc32`, and `filename COLLATE NOCASE`. One row per
+   dumped file (the `.cue` plus one file per track/image).
+
+2. **`redump_track` is now geometry-only:** `(redump_id, number, kind, pregap,
+   length, sectors)` — the `size_bytes/crc32/md5/sha1` columns are gone. **DVDs
+   have zero track rows** (their single `.iso` appears only in `redump_file`), so
+   don't assume every disc has tracks.
+
+3. **New `redump_disc.cuesheet_sha1`** column (lifted from the `.cue` file) — handy
+   for exact-disc matching.
+
+4. **`catalog` is no longer populated** — redump.info doesn't expose it cleanly.
+   The column stays for back-compat but goes NULL on re-scraped rows.
+
+Everything else (serials, regions, languages, PVD, ring codes, title/edition/
+version/media/barcode) is semantically unchanged. Region/language ordering may
+differ from v2 (redump.info's own order is now authoritative).
+
+---
+
 ## What's changing
 
 This repo now produces **one** SQLite per release instead of one per data source.
