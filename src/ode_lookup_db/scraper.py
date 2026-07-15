@@ -121,6 +121,23 @@ def discover_recent_added(
     return new_targets, new_checkpoint
 
 
+def should_advance_checkpoint(*, failed: int, unfetched: int) -> bool:
+    """Whether the added-desc checkpoint may move up to the newest discovered id.
+
+    The checkpoint asserts "everything above this id is already in the JSONL",
+    and `discover_recent_added` stops walking the moment it sees it. So it may
+    only advance once every discovered disc has actually been stored: anything
+    skipped this run would sit *below* the new marker, where no later walk ever
+    looks again.
+
+    `unfetched` counts targets we never attempted (`--limit` truncating the
+    list); `failed` counts ones we attempted but couldn't store. Either way the
+    marker stays put and the next run re-walks — a few listing pages is a cheap
+    price for not silently losing discs.
+    """
+    return failed == 0 and unfetched == 0
+
+
 def discover_disc_ids(
     client: RedumpClient,
     system: str,

@@ -35,6 +35,7 @@ from ode_lookup_db.scraper import (  # noqa: E402
     SYSTEM_SLUGS,
     discover_disc_ids,
     discover_recent_added,
+    should_advance_checkpoint,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -188,8 +189,10 @@ def main() -> int:
                 if rid not in rows_by_id:
                     targets.append((rid, system))
 
+        discovered = len(targets)
         if args.limit is not None:
             targets = targets[: args.limit]
+        unfetched = discovered - len(targets)
         total = len(targets)
         log.info("fetching %d new disc pages (workers=%d, flush every %d rows)",
                  total, args.workers, args.flush_every)
@@ -279,13 +282,19 @@ def main() -> int:
         if dirty:
             write_jsonl(rows_by_id.values())
 
-    # Persist the added-desc checkpoint only after a clean run, so a partial
-    # failure doesn't move the marker past unprocessed discs.
-    if new_checkpoint is not None and failed == 0:
+    # Persist the added-desc checkpoint only after a clean, complete run, so
+    # neither a partial failure nor a --limit cap moves the marker past discs we
+    # never stored.
+    if new_checkpoint is not None and should_advance_checkpoint(
+        failed=failed, unfetched=unfetched
+    ):
         save_checkpoint(new_checkpoint)
         log.info("checkpoint updated: topmost_redump_id=%d", new_checkpoint)
     elif new_checkpoint is not None:
-        log.warning("not updating checkpoint (failed=%d): will retry next run", failed)
+        log.warning(
+            "not updating checkpoint (failed=%d, unfetched=%d): will retry next run",
+            failed, unfetched,
+        )
 
     log.info(
         "done: fetched=%d parsed=%d failed=%d dropped=%d, total rows=%d",
