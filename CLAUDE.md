@@ -7,7 +7,7 @@ This repo is the **source of truth for the ODE lookup database**. It ships a uni
 
 **Source site (2026-07):** migrated from the retired `redump.org` to **`redump.info`** (relaunched mid-2026). Disc IDs are identical/stable across both sites, so the migration is a parser + config change, **not** a re-key. Disc pages live at `https://redump.info/disc/<id>` (no trailing slash); discovery walks `https://redump.info/discs?sort=added&order=desc&page=N`; per-system filter is `?system=PC|MAC`. The new HTML is a full rewrite (Pico/htmx), so the redump parser was rewritten for schema **v3** — see decision #7.
 
-Consumed primarily by `ODE-artwork-downloader`. See `MIGRATION-unified-db.md` for the consumer migration notes (table renames + new file name).
+Consumed primarily by `ODE-artwork-downloader`. Consumer docs: `MIGRATION-redump-v3.md` (the redump.info schema-v3 upgrade — hashes move to `redump_file`) and `MIGRATION-unified-db.md` (the earlier single-file→unified-DB change).
 
 ## Resolved design decisions (do not relitigate)
 

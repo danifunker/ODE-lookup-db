@@ -8,6 +8,10 @@
 
 ## ⚠️ redump schema v3 (redump.info migration, 2026-07) — BREAKING
 
+> **Consumers:** the full, self-contained upgrade guide (before/after SQL, DDL,
+> checklist, v2 archive) is **[`MIGRATION-redump-v3.md`](MIGRATION-redump-v3.md)**.
+> The summary below is retained for context.
+
 The redump source moved from the retired `redump.org` to `redump.info`. Disc IDs
 are unchanged, but redump.info separates **tracks** (physical layout) from
 **files** (hashes), and the row/table shape now follows that split. `meta` for
