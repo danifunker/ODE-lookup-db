@@ -6,7 +6,7 @@ Auto-updated lookup database for optical-disc and software-archive identificatio
 - [redump.info](https://redump.info) — PC and Mac CD/DVD metadata (tables `redump_*`)
 - [winworldpc.com](https://winworldpc.com) — abandonware archives (tables `winworld_*`)
 
-**Out of scope:** consoles, audio CDs, video discs. See `MIGRATION-unified-db.md` for the breaking-change migration notes if you previously consumed `redump.sqlite`.
+**Out of scope:** consoles, audio CDs, video discs. Consumers upgrading to the redump.info **schema v3** should read `MIGRATION-redump-v3.md`. See `MIGRATION-unified-db.md` for the earlier single-file→unified-DB notes if you previously consumed `redump.sqlite`.
 
 ## For consumers (apps that look up discs)
 
