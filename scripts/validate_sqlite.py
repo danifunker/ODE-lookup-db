@@ -64,13 +64,15 @@ def main() -> int:
                 CANARY_REDUMP_ID,
             )
         else:
-            tracks = canary.get("tracks") or []
+            # Hashes live on files[] / redump_file; tracks[] is geometry-only and
+            # is empty for DVDs, so reading a hash from it always came up None.
+            files = canary.get("files") or []
             canary_sha1 = next(
-                (t.get("sha1") for t in tracks if t.get("sha1")), None
+                (f.get("sha1") for f in files if f.get("sha1")), None
             )
             if canary_sha1:
                 hit = conn.execute(
-                    "SELECT redump_id FROM redump_track WHERE sha1 = ?",
+                    "SELECT redump_id FROM redump_file WHERE sha1 = ?",
                     (canary_sha1.lower(),),
                 ).fetchone()
                 if hit is None or hit[0] != CANARY_REDUMP_ID:
