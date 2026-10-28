@@ -1,0 +1,20 @@
+name: Acknowledge recheck request
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  ack:
+    if: contains(github.event.issue.labels.*.name, 'disc-recheck')
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            -R ${{ github.repository }} \
+            -b "Thanks — this recheck is queued. It will be processed in the next daily run (up to 30/day; older requests go first)."

@@ -1,0 +1,34 @@
+name: Validate PR
+
+on:
+  pull_request:
+    paths:
+      - "data/stats.json"
+      - "schema/**"
+      - "src/**"
+      - "scripts/**"
+      - "pyproject.toml"
+      - "uv.lock"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+        with:
+          python-version: "3.12"
+      - run: uv sync --extra dev
+      # Validate the PR's code against the current released data.
+      - name: Fetch source data
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/fetch_data.sh latest
+      - name: Lint
+        run: uv run ruff check .
+      - name: Tests
+        run: uv run pytest -q
+      - name: Validate JSONL
+        run: uv run scripts/validate.py
+      - name: Build SQLite (smoke)
+        run: uv run scripts/build_sqlite.py --out /tmp/ode-lookup.sqlite

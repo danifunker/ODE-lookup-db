@@ -1,0 +1,323 @@
+# ODE-lookup-db
+
+Auto-updated lookup database for optical-disc and software-archive identification, curated for the USBODE ecosystem.
+
+**Sources:**
+- [redump.info](https://redump.info) — PC and Mac CD/DVD metadata (tables `redump_*`)
+- [winworldpc.com](https://winworldpc.com) — abandonware archives (tables `winworld_*`)
+
+**Out of scope:** consoles, audio CDs, video discs. Consumers upgrading to the redump.info **schema v3** should read `MIGRATION-redump-v3.md`. See `MIGRATION-unified-db.md` for the earlier single-file→unified-DB notes if you previously consumed `redump.sqlite`.
+
+## For consumers (apps that look up discs)
+
+The latest database is published as a GitHub Release. Fetch it like this:
+
+```bash
+# Most recent build — stable URL
+curl -L -o ode-lookup.sqlite \
+  https://github.com/danifunker/ODE-lookup-db/releases/download/latest/ode-lookup.sqlite
+
+# Specific dated build
+curl -L -o ode-lookup.sqlite \
+  https://github.com/danifunker/ODE-lookup-db/releases/download/db-2026-05-18/ode-lookup.sqlite
+```
+
+Use `If-Modified-Since` / `ETag` against the asset URL to avoid re-downloading unchanged builds.
+
+### SQLite schema
+
+`meta` has one row per source with its own `schema_version`:
+
+```sql
+SELECT * FROM meta;
+-- redump  | 2 | 2026-05-22T... | <commit> | 59899
+-- winworld| 1 | 2026-05-22T... | <commit> | 3123
+```
+
+Redump tables (PC / Mac CDs and DVDs):
+
+| Table | Purpose |
+|---|---|
+| `redump_disc` | One row per redump disc |
+| `redump_track` | One row per track. Indexed by `crc32`, `md5`, `sha1` |
+| `redump_serial` | Vendor serials, indexed |
+| `redump_region` | Region tags |
+| `redump_language` | ISO 639-1 codes (`zz` = unmapped) |
+| `redump_artwork` | Reserved; not populated yet |
+| `redump_disc_fts` | FTS5 over title + foreign_title + pvd_volume_id |
+
+WinWorld tables (abandonware archives):
+
+| Table | Purpose |
+|---|---|
+| `winworld_product` | One row per product slug (windows-95, mac-os-x, …) |
+| `winworld_release` | One row per release page; includes notes, install instructions, info JSON |
+| `winworld_download` | One row per `.7z` download. Indexed by `archive_hash`, `media_kind`, `language` |
+| `winworld_serial` | Per-release product keys when listed on the page |
+| `winworld_screenshot` | Per-release screenshot URLs + alt text |
+| `winworld_release_fts` | FTS5 over title + subtitle + description |
+
+Query by track hash (redump):
+
+```sql
+SELECT redump_id, title FROM redump_disc
+JOIN redump_track USING (redump_id)
+WHERE redump_track.sha1 = ?;
+```
+
+Query by PVD volume label (useful for mounted ISOs):
+
+```sql
+SELECT redump_id, title FROM redump_disc WHERE pvd_volume_id = ?;
+```
+
+Query by WinWorld `.7z` hash (only matches the archive bytes, not the inner ISO):
+
+```sql
+SELECT filename, media_kind, language
+FROM winworld_download
+WHERE archive_hash = ?;
+```
+
+Always check `meta.schema_version` for the source you're querying.
+
+## For contributors
+
+### Found a wrong/outdated disc entry?
+
+[Open a "Disc re-check request" issue](https://github.com/danifunker/ODE-lookup-db/issues/new?template=disc-recheck.yml). Include the `redump_id` (the number in the redump.info disc URL). The next daily run will re-scrape it and close the issue.
+
+Recheck requests are processed up to **30 per UTC day**. If many are open, yours may roll over to the next run — no manual approval needed.
+
+### Local development (macOS)
+
+```bash
+brew install uv
+git clone https://github.com/danifunker/ODE-lookup-db.git
+cd ODE-lookup-db
+uv sync --extra dev
+scripts/fetch_data.sh          # pull redump.jsonl + winworld.jsonl from the latest release (needs `gh`)
+uv run pytest -q
+
+# Try a tiny scrape (redump)
+uv run scripts/scrape.py --limit 5 --systems pc
+uv run scripts/validate.py
+uv run scripts/build_sqlite.py
+sqlite3 data/ode-lookup.sqlite '.schema'
+```
+
+WinWorld pipeline (heavy artifacts go on a NAS via `WINWORLD_DATA_DIR`):
+
+```bash
+export WINWORLD_DATA_DIR=/Volumes/Software/winworld-pc
+uv run winworld/scripts/scrape_metadata.py
+uv run winworld/scripts/assemble.py
+uv run winworld/scripts/build_inventory_index.py
+uv run scripts/build_sqlite.py        # unified build with both sources
+```
+
+`assemble.py` regenerates `winworld/data/winworld.jsonl` + `stats.json` from the
+raw tree (on the NAS). When that tree lives on the NAS, copy the two committed
+artifacts back into the repo and commit them:
+
+```bash
+cp "$WINWORLD_DATA_DIR/winworld.jsonl" winworld/data/winworld.jsonl
+cp "$WINWORLD_DATA_DIR/stats.json"     winworld/data/stats.json
+git add winworld/data/winworld.jsonl winworld/data/stats.json
+git commit -m "winworld: refresh metadata scrape $(date -u +%Y-%m-%d)"
+```
+
+#### Updating `disc_images.jsonl`
+
+`winworld/data/disc_images.jsonl` is the consolidated per-disc inspection data
+(one line per inspected `.iso`: hashes, sizes, volume labels) that
+`build_sqlite.py` folds into the `winworld_disc_image` table. **The daily
+pipeline does not regenerate it** — it only *reads* whatever is committed (the
+runner has no NAS access and the source archives are 200 MB+). So this is a
+manual, run-it-occasionally local step, then `git add` + commit the result.
+
+It is built in three stages, all reading/writing the NAS archive tree except the
+final consolidation, which writes straight into the repo:
+
+```bash
+export WINWORLD_DATA_DIR=/Volumes/Software/winworld-pc
+
+# 1. Download new optical archives (.7z) — polite trickle, 25 files per run.
+uv run winworld/scripts/download.py
+
+# 2. Extract each new CD/DVD .7z, inspect+hash every .iso inside, write a
+#    .derived.json sidecar next to the archive on the NAS. Idempotent: only
+#    archives without a final .derived.json are processed.
+#    Classic-Mac discs are HFS/APM (no ISO9660 filesystem), so pycdlib can't
+#    walk them; if `rb-cli` is on PATH it's used as a fallback to record the
+#    partition table + volume name (status `hfs_identified`, no filetree — the
+#    image_sha256 stays the primary fingerprint). Optional dep; without it those
+#    discs stay `inspect_failed` but still contribute image_sha256 + size.
+uv run winworld/scripts/extract_and_hash.py
+
+# 3. Fold every .derived.json on the NAS into the committed JSONL. This writes
+#    directly to winworld/data/disc_images.jsonl in the repo (NOT the NAS), so
+#    there is no copy-back step.
+uv run winworld/scripts/build_disc_images_jsonl.py
+
+git add winworld/data/disc_images.jsonl
+git commit -m "winworld: refresh disc inspection data $(date -u +%Y-%m-%d)"
+```
+
+So no, nothing rebuilds it for you: run the three scripts when you've downloaded
+more discs, then add and commit `disc_images.jsonl`. Steps 1–2 are resumable and
+safe to re-run; step 3 is a pure fold and can be repeated any time (rerunning it
+without new `.derived.json` sidecars just reproduces the same file).
+
+### Seeding from scratch
+
+A full re-seed is needed after a parser/schema change, because `scrape.py` skips
+any `redump_id` already present in `data/redump.jsonl`. To re-fetch everything
+through the current parser, start from an empty source file:
+
+```bash
+# 1. Clear the existing data (it's not in git — the next release publishes the new file).
+rm data/redump.jsonl
+
+# 2. Exhaustive walk of every PC/Mac listing page (not the added-desc checkpoint).
+uv run scripts/scrape.py --full-discovery
+
+# 3. Validate and build.
+uv run scripts/validate.py
+uv run scripts/build_sqlite.py
+```
+
+#### Manually setting the discovery checkpoint
+
+The daily cron uses the **added-desc** discovery path, which walks redump's
+newest-first listing and stops once it reaches `topmost_redump_id` in
+`data/discovery_checkpoint.json`. A `--full-discovery` seed does **not** update
+this file, so after a from-scratch seed you must set it by hand to the highest
+`redump_id` you captured — otherwise the next cron run re-walks discs you already
+have.
+
+Set it to the max ID in the freshly seeded JSONL:
+
+```bash
+uv run python -c "
+import json, pathlib
+ids = [json.loads(l)['redump_id'] for l in pathlib.Path('data/redump.jsonl').read_text().splitlines() if l.strip()]
+top = max(ids)
+pathlib.Path('data/discovery_checkpoint.json').write_text(json.dumps({'topmost_redump_id': top}, indent=2) + chr(10))
+print('checkpoint set to', top)
+"
+```
+
+The file format is:
+
+```json
+{
+  "topmost_redump_id": 133529,
+  "updated_at": "2026-05-19T17:05:04.627539+00:00"
+}
+```
+
+Only `topmost_redump_id` is required; `updated_at` is informational and is
+refreshed automatically on the next successful cron run. Commit the checkpoint,
+and upload the seeded JSONL to the `latest` release (see "Source data" below)
+before the next cron run.
+
+### Repo layout
+
+```
+data/redump.jsonl      redump source of truth (gitignored; release asset redump.jsonl.gz)
+data/stats.json        redump row counts + all known IDs
+data/ode-lookup.sqlite unified built artifact (gitignored; released)
+schema/                JSON Schema + human field docs (redump)
+src/ode_lookup_db/     parser, validator, db, scraper, http client
+scripts/               CLI entry points: scrape, recheck, validate, build_sqlite, canary, stats
+tests/                 pytest; fixtures hold cached HTML
+.github/workflows/     daily.yml (cron), validate-pr.yml
+
+winworld/              winworldpc.com subtree (see winworld/README.md)
+  src/ode_winworld/    fetch, parse, download modules
+  scripts/             scrape_metadata, assemble, download, match_local, ...
+  data/winworld.jsonl  winworld source of truth (gitignored; release asset winworld.jsonl.gz)
+```
+
+### Daily pipeline
+
+Triggered by cron at 06:17 UTC and via `workflow_dispatch`:
+
+1. Download `redump.jsonl.gz` + `winworld.jsonl.gz` from the `latest` release
+2. Process open `disc-recheck` issues (≤ 30/day)
+3. Discover new disc IDs across PC and Mac system pages
+4. Fetch each new disc (≤ 1 req/sec, polite User-Agent)
+5. Parse → validate against `schema/disc.schema.json`
+6. Run canary (re-parse pinned discs from the live site — see below)
+7. Append/update `data/redump.jsonl`, refresh `stats.json`
+8. Build `ode-lookup.sqlite` and publish it plus both gzipped JSONLs to
+   `db-YYYY-MM-DD` and `latest` (dated releases are the rollback points)
+9. Commit `stats.json` + discovery checkpoint
+
+### Source data
+
+The JSONLs are **not** in git (they used to be in Git LFS and exhausted the
+quota). The `latest` release holds the live copy; every dated `db-*` release
+holds a snapshot. `scripts/fetch_data.sh [TAG] [--force]` downloads and
+unpacks them. To publish a locally assembled `winworld.jsonl`, upload it
+outside the cron window:
+
+```bash
+gzip -9 -n -c "$WINWORLD_DATA_DIR/winworld.jsonl" > /tmp/winworld.jsonl.gz
+gh release upload latest /tmp/winworld.jsonl.gz --clobber
+```
+
+Failures file a GitHub issue and abort the commit. Warnings file an issue but proceed.
+
+### Canary fixtures
+
+`scripts/canary.py` guards against redump changing their HTML in a way that
+breaks the parser. It fetches the live page for each pinned disc (see
+`tests/fixtures/canary/*.html`) and compares the parse to the stored
+`*.expected.json`.
+
+A live page can differ from its fixture for two reasons, and the canary treats
+them differently:
+
+- **The parser broke** — the live page no longer parses, or no longer passes
+  schema validation. This is a real regression: the canary **hard-fails**
+  (exit 1) and the daily run aborts.
+- **A redump editor edited the disc** — new ring code, extra dumper, a volume
+  label that wasn't there before, a re-dump, etc. The parser is fine; our frozen
+  fixture is just stale. The canary logs a **soft warning** ("drift"), notes it
+  in the Actions step summary, and **lets the run proceed** (exit 0).
+
+So an upstream metadata edit no longer kills the daily scrape. When you see a
+drift warning, refresh the fixture at your convenience:
+
+```bash
+# Refresh just the disc(s) that drifted (the warning prints the exact command):
+uv run scripts/canary.py --update --ids 16345
+
+# Or refresh every canary fixture:
+uv run scripts/canary.py --update
+```
+
+`--update` re-fetches the live page and rewrites **both** `<id>.html` and
+`<id>.expected.json` together — they must stay in sync because
+`tests/test_parser.py` parses the frozen HTML offline and compares it to the
+expected JSON. After updating, run `uv run pytest tests/test_parser.py` and fix
+any hand-written assertions that pinned the old data (e.g. a disc that gained a
+volume label moves from `test_volume_label_absent` to `test_volume_label_positive`).
+
+Other flags:
+
+- `--strict` — treat *any* difference as a failure (exit 1). Useful for a manual
+  end-to-end check that nothing at all has changed.
+- `--ids 16345,99835` — limit any mode to specific discs.
+
+## Schema
+
+See [`schema/README.md`](schema/README.md) for field-by-field docs. The schema is **forward-compatible v1** — new optional fields may be added; existing fields will not be renamed or removed without a major-version bump.
+
+The `artwork` field is reserved for future use (archived cover/disc/manual scans). It is always `null` or omitted in v1.
+
+## License
+
+TBD.

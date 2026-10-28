@@ -1,0 +1,49 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Built artifact — released, not committed
+data/ode-lookup.sqlite
+data/ode-lookup.sqlite.*
+data/redump.sqlite
+
+# Source-of-truth JSONLs — published as release assets, not committed
+# (fetch with scripts/fetch_data.sh)
+data/redump.jsonl
+data/*.jsonl.gz
+winworld/data/winworld.jsonl
+
+# Local resume state — not committed
+data/discovery.json
+
+# Ephemeral validator output
+data/warnings.json
+
+# Local run logs
+logs/
+
+# winworld/ subtree — canonical data lives on NAS via WINWORLD_DATA_DIR.
+# In-repo data/ holds only stats; the JSONL ships as a release asset; everything
+# else is derivable or local-scratch.
+winworld/data/raw/
+winworld/data/archives/
+winworld/data/extracted/
+winworld/data/discovery.json
+winworld/data/fulllog.json
+winworld/data/winworld.sqlite
+winworld/data/local_match_report.json
+winworld/data/inventory.tsv
+winworld/data/inventory_by_category/
+
+# Local scratch
+.DS_Store
+*.swp
+.idea/
+.vscode/

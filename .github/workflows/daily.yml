@@ -1,0 +1,144 @@
+name: Daily scrape
+
+on:
+  schedule:
+    - cron: "17 6 * * *"   # 06:17 UTC daily
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Cap on new discs to fetch this run"
+        required: false
+        default: ""
+      allow_deletions:
+        description: "Permit row removals (default: warn only)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: db-write
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330  # under the 6h GHA cap
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: uv sync --extra dev
+
+      # JSONLs live in the `latest` release, not git (see CLAUDE.md decision #1).
+      - name: Fetch source data
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/fetch_data.sh latest
+
+      - name: Process recheck requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: uv run scripts/recheck.py
+
+      - name: Scrape new discs
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.limit }}" ]; then ARGS="--limit ${{ inputs.limit }}"; fi
+          uv run scripts/scrape.py $ARGS
+
+      - name: Validate
+        run: uv run scripts/validate.py
+
+      - name: Canary
+        run: uv run scripts/canary.py
+
+      - name: Refresh stats
+        run: uv run scripts/stats.py
+
+      - name: Build SQLite release artifact
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: uv run scripts/build_sqlite.py
+
+      - name: Validate SQLite artifact
+        run: uv run scripts/validate_sqlite.py
+
+      - name: Compress release artifact
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+          zstd --ultra -22 --long=27 -f -o data/ode-lookup.sqlite.zst data/ode-lookup.sqlite
+          sha256sum data/ode-lookup.sqlite      > data/ode-lookup.sqlite.sha256
+          sha256sum data/ode-lookup.sqlite.zst  > data/ode-lookup.sqlite.zst.sha256
+          gzip -9 -n -c data/redump.jsonl             > data/redump.jsonl.gz
+          gzip -9 -n -c winworld/data/winworld.jsonl  > data/winworld.jsonl.gz
+          ls -lh data/ode-lookup.sqlite data/ode-lookup.sqlite.zst data/*.jsonl.gz
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="db-$(date -u +%Y-%m-%d)"
+          ASSETS=(
+            data/ode-lookup.sqlite.zst
+            data/ode-lookup.sqlite.zst.sha256
+            data/ode-lookup.sqlite.sha256
+            data/redump.jsonl.gz
+            data/winworld.jsonl.gz
+          )
+          # Dated release doubles as the rollback point for the source JSONLs.
+          gh release create "$TAG" "${ASSETS[@]}" --latest=false \
+            --title "Database $TAG" \
+            --notes "Automated daily build. Unified schema (redump v3, winworld v1). Decompress with: zstd -d ode-lookup.sqlite.zst" || \
+          gh release upload "$TAG" "${ASSETS[@]}" --clobber
+          # "latest" is updated in place (never deleted) — it holds the only
+          # live copy of the source JSONLs that the next run fetches.
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest "${ASSETS[@]}" --clobber
+          else
+            gh release create latest "${ASSETS[@]}" \
+              --title "Latest" \
+              --notes "Always points at the most recent successful build. Decompress with: zstd -d ode-lookup.sqlite.zst"
+          fi
+
+      # After publishing, so stats.json never claims IDs the released JSONL lacks.
+      - name: Commit stats + checkpoint
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/stats.json data/discovery_checkpoint.json
+          if git diff --cached --quiet; then
+            echo "no changes"
+            exit 0
+          fi
+          git commit -m "data: daily scrape $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: File issue on warnings
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f data/warnings.json ] && [ "$(jq '.warnings | length' data/warnings.json)" -gt 0 ]; then
+            BODY=$(jq -r '.warnings | join("\n\n")' data/warnings.json)
+            gh issue create \
+              --title "Daily scrape warnings: $(date -u +%Y-%m-%d)" \
+              --label "automated,warning" \
+              --body "$BODY"
+          fi
+
+      - name: File issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Daily scrape FAILED: $(date -u +%Y-%m-%d)" \
+            --label "automated,bug" \
+            --body "Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
